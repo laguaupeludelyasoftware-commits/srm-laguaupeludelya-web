@@ -1,0 +1,28 @@
+# La imagen oficial sustituye PORT al arrancar. Las variables Nginx permanecen intactas.
+server {
+    listen ${PORT};
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+    server_tokens off;
+
+    location = /health {
+        access_log off;
+        default_type text/plain;
+        return 200 'ok';
+    }
+
+    location = /index.html {
+        add_header Cache-Control "no-cache";
+    }
+
+    location /assets/ {
+        try_files $uri =404;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    # React Router resuelve las rutas de aplicación también al recargar o abrir enlaces.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}

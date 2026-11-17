@@ -1,0 +1,503 @@
+/* Ajustes táctiles acotados: las composiciones de escritorio se conservan. */
+.clients-mobile-grid,
+.agenda-mobile-month,
+.calendar-swipe-hint {
+  display: none;
+}
+
+.calendar-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 1100px), (pointer: coarse) {
+  .hero-copy,
+  .hero-art {
+    min-width: 0;
+  }
+
+  /* Contiene adornos durante la carga de fuentes, sin ocultar el resto de la página. */
+  .hero {
+    overflow-x: clip;
+  }
+
+  .button,
+  .button-small,
+  .icon-button,
+  .round-link,
+  .segmented button,
+  .time-slot,
+  .filter-chip {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .button,
+  .button-small,
+  .public-nav,
+  .sidebar nav a {
+    font-size: 0.85rem;
+  }
+
+  /* iOS amplía campos inferiores a 16px al enfocar; no se desactiva el zoom del usuario. */
+  input:not([type='checkbox']),
+  select,
+  textarea,
+  .field input,
+  .field select,
+  .field textarea,
+  .hours-row input[type='time'],
+  .search-field input {
+    font-size: 16px;
+    min-height: 44px;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .field,
+  .form-grid > *,
+  .hours-row > *,
+  .customer-grid > *,
+  .booking-grid > * {
+    min-width: 0;
+  }
+
+  .field label,
+  .checkbox-line,
+  .hours-row .checkbox-line {
+    font-size: 0.83rem;
+  }
+
+  .checkbox-line {
+    min-height: 44px;
+  }
+
+  .checkbox-line input {
+    width: 19px;
+    height: 19px;
+    flex-shrink: 0;
+  }
+
+  .dialog-content {
+    max-height: calc(100dvh - 32px);
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: max(28px, env(safe-area-inset-bottom));
+  }
+
+  .pet-card > div,
+  .agenda-appointment-copy,
+  td,
+  .client-mobile-card p {
+    overflow-wrap: anywhere;
+  }
+
+  .calendar-week {
+    min-width: 840px;
+    overflow: visible;
+  }
+
+  .calendar-week .agenda-appointment {
+    min-height: 100px;
+  }
+
+  .calendar-week .agenda-appointment h3,
+  .calendar-week .appointment-time {
+    font-size: 0.86rem;
+  }
+
+  .calendar-week .agenda-appointment p {
+    font-size: 0.72rem;
+  }
+
+  .calendar-swipe-hint {
+    display: block;
+    padding: 12px 20px;
+    font-size: 0.75rem;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
+  }
+}
+
+/* iPad en ambas orientaciones: navegación superior accesible, sin comprimir el panel. */
+@media (min-width: 581px) and (max-width: 1100px) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .management-layout {
+    display: block;
+  }
+
+  .sidebar {
+    position: sticky;
+    top: 0;
+    z-index: 35;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    padding: 18px 28px 12px;
+  }
+
+  .sidebar .brand img {
+    width: 44px;
+    height: 44px;
+  }
+
+  .sidebar .brand > span {
+    font-size: 1.1rem;
+  }
+
+  .sidebar .brand i {
+    display: inline;
+    margin-left: 4px;
+  }
+
+  .sidebar .brand small {
+    display: none;
+  }
+
+  .workspace-label,
+  .sidebar-bottom {
+    display: none;
+  }
+
+  .sidebar nav {
+    flex-direction: row;
+    margin-top: 14px;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .sidebar nav a {
+    min-height: 46px;
+    padding: 10px 16px;
+    white-space: nowrap;
+    gap: 9px;
+  }
+
+  .management-main {
+    padding: 32px 28px 55px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .stat-card {
+    padding: 20px 17px;
+  }
+
+  .stat-card > div > small {
+    font-size: 0.72rem;
+  }
+
+  .catalog-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .catalog-card > p {
+    min-height: 65px;
+    font-size: 0.85rem;
+  }
+
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hours-head,
+  .hours-row {
+    grid-template-columns: minmax(140px, 1.3fr) 1fr 1fr;
+    gap: 20px;
+  }
+
+  table {
+    min-width: 720px;
+  }
+
+  td {
+    padding: 19px 14px;
+    font-size: 0.83rem;
+  }
+
+  th {
+    font-size: 0.72rem;
+  }
+
+  .customer-grid,
+  .booking-grid {
+    grid-template-columns: 1.5fr 1fr;
+  }
+
+  .booking-summary {
+    top: 115px;
+  }
+}
+
+@media (max-width: 800px) {
+  .booking-grid,
+  .customer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .booking-summary {
+    position: static;
+  }
+
+  .booking-summary dl {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .booking-summary dt,
+  .booking-summary dd {
+    margin: 0;
+  }
+
+  .booking-summary dd {
+    text-align: right;
+  }
+
+  .hero-actions {
+    gap: 15px;
+  }
+
+  .public-nav.open {
+    max-height: calc(100dvh - 115px);
+    overflow-y: auto;
+  }
+
+  .public-nav > a:not(.button) {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .clients-desktop-table {
+    display: none;
+  }
+
+  .clients-mobile-grid {
+    display: grid;
+    gap: 15px;
+  }
+
+  .client-mobile-card {
+    padding: 22px;
+  }
+
+  .client-mobile-card h2 {
+    font-size: 1.4rem;
+  }
+
+  .client-mobile-card p {
+    margin-top: 7px;
+    font-size: 0.84rem;
+  }
+
+  .client-mobile-badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 16px 0;
+  }
+
+  .client-mobile-card .button {
+    width: 100%;
+    margin-top: 15px;
+  }
+
+  /* En móvil el mes se explora por días; no se reducen siete columnas a texto diminuto. */
+  .calendar-month {
+    display: none;
+  }
+
+  .agenda-mobile-month {
+    display: grid;
+    gap: 8px;
+    padding: 16px;
+  }
+
+  .month-day-button {
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    min-height: 65px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: #f9faf3;
+    text-align: left;
+  }
+
+  .month-day-button > strong {
+    font-family: var(--serif);
+    font-size: 1.4rem;
+    text-align: center;
+    color: var(--green);
+  }
+
+  .month-day-button span {
+    font-size: 0.86rem;
+    text-transform: capitalize;
+  }
+
+  .month-day-button small {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: none;
+  }
+}
+
+@media (max-width: 580px) {
+  .hero-underline {
+    width: 45%;
+    margin-left: 50%;
+  }
+
+  .hero-actions .button {
+    width: 100%;
+    font-size: 0.9rem;
+  }
+
+  .hero-actions .text-link {
+    font-size: 0.8rem;
+    min-height: 44px;
+  }
+
+  .hero-note {
+    font-size: 0.72rem;
+  }
+
+  .service-card > p,
+  .landing-step p,
+  .philosophy-grid p,
+  .contact-card p {
+    font-size: 0.88rem !important;
+  }
+
+  .service-card-bottom {
+    font-size: 0.81rem;
+  }
+
+  .sidebar nav {
+    padding-bottom: 4px;
+    gap: 7px;
+    scrollbar-width: thin;
+  }
+
+  .sidebar nav a {
+    min-height: 46px;
+    font-size: 0.78rem;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .sidebar nav a svg {
+    width: 18px;
+  }
+
+  .management-main .page-heading > .button,
+  .customer-page .page-heading > .button {
+    width: 100%;
+  }
+
+  .dialog-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .dialog-actions .button {
+    width: 100%;
+  }
+
+  .booking-navigation > .button:last-child {
+    flex: 1;
+  }
+
+  .hours-head,
+  .hours-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .hours-head {
+    display: none;
+  }
+
+  .hours-row {
+    padding: 15px 0;
+  }
+
+  .hours-row .checkbox-line {
+    grid-column: 1 / -1;
+    min-height: 35px;
+    font-size: 0.9rem;
+  }
+
+  .hours-row input[type='time'] {
+    padding: 12px;
+  }
+
+  .agenda-appointment {
+    min-height: 90px;
+  }
+
+  .agenda-appointment h3 {
+    font-size: 1rem;
+  }
+
+  .agenda-appointment p,
+  .appointment-card > p,
+  .validation-card > p {
+    font-size: 0.82rem;
+  }
+
+  .agenda-toolbar .segmented {
+    width: 100%;
+  }
+
+  .segmented button {
+    flex: 1;
+  }
+
+  .date-navigation h2 {
+    font-size: 0.9rem;
+  }
+
+  .settings-panel,
+  .booking-form {
+    padding-inline: 20px;
+  }
+}
+
+@media (max-width: 360px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .brand {
+    gap: 8px;
+  }
+
+  .brand > span {
+    font-size: 0.9rem;
+  }
+
+  .booking-progress {
+    gap: 8px;
+  }
+
+  .date-navigation {
+    flex-wrap: wrap;
+  }
+}

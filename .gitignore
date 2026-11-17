@@ -151,6 +151,10 @@ vite.config.ts.timestamp-*
 # Turbo Repo (https://turborepo.dev/)
 .turbo
 
+# Resultados locales de pruebas de navegador.
+playwright-report/
+test-results/
+
 # Nx (https://nx.dev/)
 .nx/cache
 .nx/workspace-data
