@@ -121,14 +121,16 @@ test('agenda semanal contenida y mes utilizable con tacto', async ({ page }, tes
     'true',
   );
   await expect(page.locator('.calendar-week')).toBeVisible();
-  await expect(page.locator('.week-time-axis').getByText('09:00', { exact: true })).toBeVisible();
+  await expect(
+    page.locator('.calendar-time-axis').getByText('09:00', { exact: true }),
+  ).toBeVisible();
   await expect(page.locator('.calendar-week .calendar-day')).toHaveCount(7);
   const milo = page.getByRole('button', { name: /Milo, 10:00, 60 min/ });
   const coco = page.getByRole('button', { name: /Coco, 12:00, 90 min/ });
   const hourHeight = await page
     .locator('.calendar-week')
     .evaluate((week) =>
-      Number.parseFloat(getComputedStyle(week).getPropertyValue('--week-hour-height')),
+      Number.parseFloat(getComputedStyle(week).getPropertyValue('--calendar-hour-height')),
     );
   await expect(milo).toHaveCSS('top', `${hourHeight}px`);
   await expect(milo).toHaveCSS('height', `${hourHeight}px`);
@@ -136,7 +138,7 @@ test('agenda semanal contenida y mes utilizable con tacto', async ({ page }, tes
   await expect(coco).toHaveCSS('height', `${1.5 * hourHeight}px`);
   const scroll = page.getByRole('region', { name: 'Agenda semanal desplazable' });
   const axisShift = await scroll.evaluate((region) => {
-    const axis = region.querySelector('.week-time-axis')!;
+    const axis = region.querySelector('.calendar-time-axis')!;
     const initialX = axis.getBoundingClientRect().x;
     region.scrollLeft = 120;
     const shift = axis.getBoundingClientRect().x - initialX;
@@ -145,7 +147,40 @@ test('agenda semanal contenida y mes utilizable con tacto', async ({ page }, tes
   });
   expect(Math.abs(axisShift)).toBeLessThanOrEqual(1);
   await expectNoPageOverflow(page);
+  await page.getByRole('button', { name: 'Día', exact: true }).click();
+  const daily = page.locator('.calendar-timeline-day');
+  await expect(
+    daily.locator('.calendar-time-axis').getByText('09:00', { exact: true }),
+  ).toBeVisible();
+  await expect(daily.locator('.calendar-day')).toHaveCount(1);
+  await expect(milo).toHaveCSS('top', `${hourHeight}px`);
+  await expect(coco).toHaveCSS('height', `${1.5 * hourHeight}px`);
+  await expectNoPageOverflow(page);
+  await milo.click();
+  const detail = page.getByRole('dialog', { name: 'La visita de Milo' });
+  await expect(detail).toBeVisible();
+  const panel = await detail.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    return {
+      left: box.left,
+      right: box.right,
+      top: box.top,
+      bottom: box.bottom,
+      width: innerWidth,
+      height: innerHeight,
+    };
+  });
+  const fullscreen = panel.width <= 640 || (panel.height <= 500 && !!testInfo.project.use.hasTouch);
+  expect(panel.right).toBeCloseTo(panel.width, 0);
+  expect(panel.top).toBeCloseTo(0, 0);
+  expect(panel.bottom).toBeCloseTo(panel.height, 0);
+  if (fullscreen) expect(panel.left).toBeCloseTo(0, 0);
+  else expect(panel.left).toBeGreaterThan(0);
+  await detail.getByRole('button', { name: 'Cerrar', exact: true }).click();
+  await expect(detail).toHaveCount(0);
+  await expect(milo).toBeFocused();
   await page.getByRole('button', { name: 'Mes', exact: true }).click();
+  await expect(page.locator('.calendar-time-axis')).toHaveCount(0);
   if ((testInfo.project.use.viewport?.width ?? 1440) <= 640) {
     await expect(page.locator('.agenda-mobile-month')).toBeVisible();
     await page.locator('.month-day-button').first().click();

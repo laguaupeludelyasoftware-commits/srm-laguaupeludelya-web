@@ -40,19 +40,26 @@ export function Modal({
   description,
   open,
   onOpenChange,
+  placement,
+  onCloseAutoFocus,
   children,
 }: {
   title: string;
   description?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  placement?: 'right';
+  onCloseAutoFocus?: (event: Event) => void;
   children: ReactNode;
 }) {
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="dialog-overlay" />
-        <DialogPrimitive.Content className="dialog-content">
+        <DialogPrimitive.Content
+          className={cn('dialog-content', placement === 'right' && 'dialog-side-panel')}
+          onCloseAutoFocus={onCloseAutoFocus}
+        >
           <DialogPrimitive.Title className="dialog-title">{title}</DialogPrimitive.Title>
           <DialogPrimitive.Description className={description ? 'muted' : 'sr-only'}>
             {description ?? 'Completa los datos de esta acción de demostración.'}

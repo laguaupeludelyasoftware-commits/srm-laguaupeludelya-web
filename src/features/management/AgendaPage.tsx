@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react';
+import { useRef, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import {
   CalendarDays,
@@ -10,7 +10,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { PageHeading } from '../../components/layout';
-import { Button, EmptyState } from '../../components/ui';
+import { Button } from '../../components/ui';
 import { useDemo } from '../../data/demo-store';
 import { addDays, dateKey, localDate, statusLabels } from '../../domain/rules';
 import type { Appointment } from '../../domain/models';
@@ -49,7 +49,9 @@ export function AgendaPage() {
   const today = dateKey(new Date());
   const [day, setDay] = useState(today);
   const [view, setView] = useState<'day' | 'week' | 'month'>('week');
+  const timedView = view !== 'month';
   const [selected, setSelected] = useState<string | null>(null);
+  const appointmentTrigger = useRef<HTMLButtonElement | null>(null);
   const confirmed = state.appointments.filter(
     (a) => a.status === 'confirmed' && dateKey(new Date(a.startsAt)) === day,
   );
@@ -75,7 +77,10 @@ export function AgendaPage() {
       .filter((appointment) => dateKey(new Date(appointment.startsAt)) === date)
       .sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
   }));
-  const openingHours = state.settings.hours.filter((hours) => hours.enabled);
+  const weekday = localDate(day).getDay();
+  const openingHours = state.settings.hours.filter(
+    (hours) => hours.enabled && (view !== 'day' || hours.day === weekday),
+  );
   const visibleAppointments = columns.flatMap((column) => column.appointments);
   const rangeStart =
     Math.floor(
@@ -116,7 +121,10 @@ export function AgendaPage() {
       <button
         className={`agenda-appointment agenda-${a.status}`}
         key={a.id}
-        onClick={() => setSelected(a.id)}
+        onClick={(event) => {
+          appointmentTrigger.current = event.currentTarget;
+          setSelected(a.id);
+        }}
       >
         <div className="appointment-time">
           {new Date(a.startsAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
@@ -139,10 +147,11 @@ export function AgendaPage() {
     );
   }
 
-  function renderWeekAppointments(appointments: Appointment[]) {
+  function renderTimedAppointments(appointments: Appointment[]) {
     const { cards, lanes } = placeAppointments(appointments);
     return cards.map(({ appointment, start, end, lane }) => {
       const pet = state.pets.find((entry) => entry.id === appointment.petId);
+      const client = state.clients.find((entry) => entry.id === appointment.clientId);
       const name = pet?.name || appointment.serviceName;
       const time = new Date(appointment.startsAt).toLocaleTimeString('es-ES', {
         hour: '2-digit',
@@ -152,20 +161,26 @@ export function AgendaPage() {
         <button
           type="button"
           key={appointment.id}
-          className={`week-appointment agenda-${appointment.status}`}
+          className={`timed-appointment agenda-${appointment.status}`}
           style={{
             top: position(start),
             height: position(end) - position(start),
             left: `calc(${(lane * 100) / lanes}% + 2px)`,
             width: `calc(${100 / lanes}% - 4px)`,
           }}
-          onClick={() => setSelected(appointment.id)}
+          onClick={(event) => {
+            appointmentTrigger.current = event.currentTarget;
+            setSelected(appointment.id);
+          }}
           aria-label={`${name}, ${time}, ${appointment.duration} min, ${statusLabels[appointment.status]}`}
         >
           <strong>{name}</strong>
           <small>
             {time} · {appointment.duration} min
           </small>
+          {view === 'day' && (
+            <small>{[appointment.serviceName, client?.name].filter(Boolean).join(' · ')}</small>
+          )}
         </button>
       );
     });
@@ -311,19 +326,19 @@ export function AgendaPage() {
           tabIndex={view === 'week' ? 0 : undefined}
         >
           <div
-            className={`calendar-${view}`}
+            className={`${view === 'day' ? 'calendar-timeline-day' : `calendar-${view}`}${timedView ? ' calendar-timed' : ''}`}
             style={
-              view === 'week'
-                ? ({ '--week-hour-height': `${hourHeight}px` } as CSSProperties)
+              timedView
+                ? ({ '--calendar-hour-height': `${hourHeight}px` } as CSSProperties)
                 : undefined
             }
           >
-            {view === 'week' && (
-              <div className="week-time-axis" aria-hidden="true">
-                <div className="week-heading">Hora</div>
-                <div className="week-timeline" style={{ height: timelineHeight }}>
+            {timedView && (
+              <div className="calendar-time-axis" aria-hidden="true">
+                <div className="timeline-heading">Hora</div>
+                <div className="calendar-timeline" style={{ height: timelineHeight }}>
                   {Array.from({ length: hourCount + 1 }, (_, index) => (
-                    <span key={index} className="week-hour" style={{ top: index * hourHeight }}>
+                    <span key={index} className="calendar-hour" style={{ top: index * hourHeight }}>
                       {String(rangeStart / 60 + index).padStart(2, '0')}:00
                     </span>
                   ))}
@@ -333,19 +348,18 @@ export function AgendaPage() {
             {columns.map(({ date, appointments }) => {
               return (
                 <div key={date} className={`calendar-day ${date === today ? 'is-today' : ''}`}>
-                  <div className={`calendar-day-label ${view === 'week' ? 'week-heading' : ''}`}>
+                  <div className={`calendar-day-label ${timedView ? 'timeline-heading' : ''}`}>
                     <span>{localDate(date).toLocaleDateString('es-ES', { weekday: 'long' })}</span>
                     <strong>{localDate(date).getDate()}</strong>
                     {date === today && <small>HOY</small>}
                   </div>
-                  {view === 'week' ? (
-                    <div className="week-timeline" style={{ height: timelineHeight }}>
-                      {renderWeekAppointments(appointments)}
+                  {timedView ? (
+                    <div className="calendar-timeline" style={{ height: timelineHeight }}>
+                      {view === 'day' && !appointments.length && (
+                        <p className="timeline-empty">Todavía no hay citas para este día.</p>
+                      )}
+                      {renderTimedAppointments(appointments)}
                     </div>
-                  ) : view === 'day' && !appointments.length ? (
-                    <EmptyState title="Un día con espacio para nuevos mimos">
-                      Todavía no hay citas para este día.
-                    </EmptyState>
                   ) : (
                     appointments.map(renderAppointment)
                   )}
@@ -372,6 +386,10 @@ export function AgendaPage() {
           key={activeAppointment.id}
           appointment={activeAppointment}
           onClose={() => setSelected(null)}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            appointmentTrigger.current?.focus({ preventScroll: true });
+          }}
         />
       )}
     </>

@@ -10,9 +10,11 @@ import { appointmentDate, euros, statusLabels } from '../../domain/rules';
 export function AppointmentDialog({
   appointment,
   onClose,
+  onCloseAutoFocus,
 }: {
   appointment: Appointment | null;
   onClose: () => void;
+  onCloseAutoFocus: (event: Event) => void;
 }) {
   const { state, update } = useDemo();
   const [reject, setReject] = useState(false);
@@ -74,6 +76,8 @@ export function AppointmentDialog({
   }
   return (
     <Modal
+      placement="right"
+      onCloseAutoFocus={onCloseAutoFocus}
       title={pet ? `La visita de ${pet.name}` : 'Detalle de cita'}
       description={appointment ? appointmentDate(appointment.startsAt) : ''}
       open={!!appointment}

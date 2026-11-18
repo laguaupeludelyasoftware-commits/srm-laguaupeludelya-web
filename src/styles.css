@@ -993,6 +993,35 @@ legend {
   box-shadow: 0 30px 100px #1b28152b;
   animation: fade-in 0.18s;
 }
+.dialog-content.dialog-side-panel {
+  inset: 0 0 0 auto;
+  width: min(520px, 80vw);
+  height: 100dvh;
+  max-height: none;
+  transform: none;
+  border-radius: 0;
+  animation: dialog-slide-in 0.22s ease-out;
+}
+@keyframes dialog-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@media (max-width: 640px), (max-height: 500px) and (pointer: coarse) {
+  .dialog-content.dialog-side-panel {
+    width: 100%;
+    border: 0;
+    padding: max(28px, env(safe-area-inset-top)) max(22px, env(safe-area-inset-right))
+      max(28px, env(safe-area-inset-bottom)) max(22px, env(safe-area-inset-left));
+  }
+  .dialog-side-panel .dialog-close {
+    top: max(15px, env(safe-area-inset-top));
+    right: max(15px, env(safe-area-inset-right));
+  }
+}
 .dialog-title {
   font-family: var(--serif);
   font-size: 1.8rem;
@@ -1855,17 +1884,22 @@ legend {
   background: #f0f2e9;
   border-left-color: #b5c1a4;
 }
-.calendar-week {
+.calendar-timed {
   display: grid;
-  grid-template-columns: 58px repeat(7, minmax(0, 1fr));
-  min-width: 842px;
   padding-bottom: 22px;
 }
-.calendar-week .calendar-day {
+.calendar-week {
+  grid-template-columns: 58px repeat(7, minmax(0, 1fr));
+  min-width: 842px;
+}
+.calendar-timeline-day {
+  grid-template-columns: 58px minmax(0, 1fr);
+}
+.calendar-timed .calendar-day {
   min-width: 0;
   border-right: 1px solid var(--line);
 }
-.calendar-week .week-heading {
+.calendar-timed .timeline-heading {
   height: 64px;
   display: flex;
   align-items: center;
@@ -1875,14 +1909,14 @@ legend {
   gap: 2px;
   font-size: 0.72rem;
 }
-.week-time-axis {
+.calendar-time-axis {
   position: sticky;
   left: 0;
   z-index: 2;
   background: #fff;
   border-right: 1px solid var(--line);
 }
-.week-timeline {
+.calendar-timeline {
   position: relative;
   border-bottom: 1px solid var(--line);
   background-image: linear-gradient(
@@ -1892,9 +1926,9 @@ legend {
     var(--line) 50% calc(50% + 1px),
     transparent calc(50% + 1px)
   );
-  background-size: 100% var(--week-hour-height);
+  background-size: 100% var(--calendar-hour-height);
 }
-.week-hour {
+.calendar-hour {
   position: absolute;
   right: 7px;
   padding-top: 2px;
@@ -1902,7 +1936,7 @@ legend {
   font-size: 0.72rem;
   font-variant-numeric: tabular-nums;
 }
-.week-appointment {
+.timed-appointment {
   position: absolute;
   display: flex;
   flex-direction: column;
@@ -1920,23 +1954,27 @@ legend {
   text-align: left;
   cursor: pointer;
 }
-.week-appointment.agenda-cancelled,
-.week-appointment.agenda-rejected,
-.week-appointment.agenda-absent {
+.timed-appointment.agenda-cancelled,
+.timed-appointment.agenda-rejected,
+.timed-appointment.agenda-absent {
   background: #f5ede8;
   border-left-color: #9a6755;
 }
-.week-appointment > * {
+.timed-appointment > * {
   flex-shrink: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   line-height: 1.15;
 }
-.week-appointment:focus-visible {
+.timed-appointment:focus-visible {
   z-index: 1;
   outline: 2px solid var(--green, #526552);
   outline-offset: -2px;
+}
+.timeline-empty {
+  padding: 0.75rem;
+  color: var(--muted);
 }
 .calendar-month {
   display: grid;
