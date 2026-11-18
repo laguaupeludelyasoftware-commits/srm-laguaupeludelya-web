@@ -1,6 +1,6 @@
 # La Guaupelu de Lya · Web
 
-Primer prototipo local navegable. React, TypeScript, Vite, Tailwind CSS, React Router, Motion y componentes de composición basados en Radix/cva (patrón shadcn/ui). TanStack Query está preparado como proveedor para la futura integración; las pantallas actuales utilizan un adaptador local.
+Prototipo navegable con React, TypeScript, Vite, Tailwind CSS, React Router, Motion y componentes de composición basados en Radix/cva. La landing consulta el catálogo y el contacto con TanStack Query. Las citas de demostración se guardan en el navegador.
 
 ## Arranque
 
@@ -11,7 +11,7 @@ npm ci
 npm run dev
 ```
 
-Abrir `http://localhost:5173/`. Puerto fijo: si ya está ocupado, detener primero el proceso que lo utiliza. Para comprobar la entrega:
+Abrir `http://localhost:5173/`. Para ver los datos de la landing, arrancar también el backend con el perfil `local` en el puerto 8080. Vite reenvía la consulta pública a esa API. Para comprobar la entrega:
 
 ```sh
 npm test
@@ -36,7 +36,7 @@ Las pruebas usan el ejecutor nativo de Node y su soporte experimental de TypeScr
 
 ## Límites de la demostración
 
-**No es el MVP terminado ni un sistema seguro para datos reales.** El selector de áreas es público y no hay autenticación, autorización de servidor ni integración con la API. Todos los datos son ficticios y el aviso de demostración permanece visible.
+El panel y el área cliente siguen siendo públicos en la demostración. Las fichas y las citas de ese recorrido son ficticias. El catálogo y el contacto de la landing proceden de la API, con un catálogo inicial vacío hasta que se publiquen servicios aprobados.
 
 Los cambios se almacenan en `localStorage`, clave `lya-demo-v1`. El panel permite restablecer únicamente esa colección. Si el navegador no permite guardar, se muestra un aviso y se sigue en memoria. No introducir información personal ni contraseñas reales.
 

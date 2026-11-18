@@ -14,11 +14,13 @@ import {
   Sparkle,
 } from 'lucide-react';
 import { Button } from '../../components/ui';
-import { useDemo } from '../../data/demo-store';
+import { usePublicBusiness } from '../../data/public-business';
 
-/** Presentación pública: contenido propuesto y tarifas explícitamente ilustrativas. */
+/** Presentación pública con el contacto y catálogo publicados por el negocio. */
 export function LandingPage() {
-  const { state } = useDemo();
+  const business = usePublicBusiness();
+  const contact = business.data?.contact;
+  const services = business.data?.services ?? [];
   const icons = [Bath, Scissors, Sparkles];
   return (
     <>
@@ -127,39 +129,41 @@ export function LandingPage() {
           <p>
             Cada pelaje tiene su historia. <br />
             Encontramos el cuidado que le va.
-            <small className="demo-caption">Catálogo y precios de demostración.</small>
           </p>
         </div>
         <div className="service-grid">
-          {state.services
-            .filter((s) => s.active && s.species.some((sp) => state.settings.species.includes(sp)))
-            .map((service, index) => {
-              const Icon = icons[index % icons.length];
-              return (
-                <article className="service-card" key={service.id}>
-                  <div className="service-card-top">
-                    <span className="service-icon">
-                      <Icon size={28} strokeWidth={1.4} />
-                    </span>
-                    <span className="service-index">0{index + 1}</span>
-                  </div>
-                  <h3>{service.name}</h3>
-                  <p>{service.description}</p>
-                  <div className="service-card-bottom">
-                    <span>
-                      {service.duration} min · <strong>desde {service.price} €</strong>
-                    </span>
-                    <Link
-                      to={`/reservar?servicio=${service.id}`}
-                      aria-label={`Reservar ${service.name}`}
-                      className="round-link"
-                    >
-                      <ArrowUpRight size={20} />
-                    </Link>
-                  </div>
-                </article>
-              );
-            })}
+          {business.isPending && <p role="status">Cargando servicios…</p>}
+          {business.isError && <p role="status">No se pudieron cargar los servicios.</p>}
+          {business.isSuccess && services.length === 0 && (
+            <p role="status">Aún no hay servicios publicados.</p>
+          )}
+          {services.map((service, index) => {
+            const Icon = icons[index % icons.length];
+            return (
+              <article className="service-card" key={service.id}>
+                <div className="service-card-top">
+                  <span className="service-icon">
+                    <Icon size={28} strokeWidth={1.4} />
+                  </span>
+                  <span className="service-index">0{index + 1}</span>
+                </div>
+                <h3>{service.name}</h3>
+                <p>{service.description}</p>
+                <div className="service-card-bottom">
+                  <span>
+                    {service.duration} min · <strong>desde {service.price} €</strong>
+                  </span>
+                  <Link
+                    to={`/reservar?${new URLSearchParams({ servicio: service.id, origen: 'catalogo' })}`}
+                    aria-label={`Reservar ${service.name}`}
+                    className="round-link"
+                  >
+                    <ArrowUpRight size={20} />
+                  </Link>
+                </div>
+              </article>
+            );
+          })}
         </div>
         <p className="section-footnote">
           El cuidado se adapta a su especie, tamaño y manto. El importe final se valorará según sus
@@ -249,12 +253,18 @@ export function LandingPage() {
             <br />
             del primer <em>guau?</em>
           </h2>
-          <p>
-            Estamos preparando este pequeño espacio.
-            <br />
-            Pronto encontrarás aquí cómo llegar y contactar con Lya.
-          </p>
-          <span className="soft-tag">Dirección y contacto pendientes de confirmar</span>
+          {business.isPending && <p role="status">Cargando datos de contacto…</p>}
+          {business.isError && <p role="status">No se pudieron cargar los datos de contacto.</p>}
+          {business.isSuccess && !contact && <p>Los datos de contacto aún no están publicados.</p>}
+          {contact && (
+            <p>
+              <a className="inline-link" href={`tel:${contact.phone}`}>
+                {contact.phone}
+              </a>
+              <br />
+              {contact.address}
+            </p>
+          )}
         </div>
         <div className="contact-card">
           <PawPrint size={32} strokeWidth={1.3} />

@@ -8,6 +8,6 @@ Nginx escucha en PORT, con valor inicial 8080. La imagen oficial sustituye la va
 
 Este frontend no necesita credenciales PostgreSQL ni claves RSA. Sigue siendo una demostración con datos locales por navegador y origen, sin sincronización entre equipos. El panel es público de forma intencionada para revisar el prototipo. No introducir datos personales reales.
 
-La integración con la API se implementará aparte: definir una URL de backend no conecta automáticamente los formularios. No guardar secretos en variables VITE o en código frontend.
+Para conectar la landing, configurar `VITE_API_BASE_URL` en el servicio web con la URL pública HTTPS del backend, antes de compilar. La API debe incluir el origen de la web en `APP_CORS_ALLOWED_ORIGINS`. Las reservas y el panel siguen usando los datos de demostración del navegador. Las variables VITE quedan visibles en el código compilado.
 
 Tras desplegar, revisar landing y logotipo, apertura directa/recarga de `/gestion/clientes` y `/reservar`, persistencia/restablecimiento y diseño en móvil/iPad real. Hay 35 pruebas Playwright correctas de tamaños móviles, tablet y escritorio, sin sustituir la comprobación en el dispositivo. Los contenedores no se han ejecutado localmente porque Docker Engine no estaba disponible; la compilación Vite se verifica por separado.

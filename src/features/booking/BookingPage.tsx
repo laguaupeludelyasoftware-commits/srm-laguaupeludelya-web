@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Check, CheckCircle2, Clock3, PawPrint, Plus } from 'lucide-react';
 import { Button, EmptyState, Field, Modal, Notice } from '../../components/ui';
 import { useDemo } from '../../data/demo-store';
+import { usePublicBusiness } from '../../data/public-business';
 import {
   addDays,
   appointmentDate,
@@ -18,6 +19,8 @@ import { PetForm } from '../customer/PetForm';
 export function BookingPage() {
   const { state, update } = useDemo();
   const [params] = useSearchParams();
+  const fromCatalog = params.get('origen') === 'catalogo';
+  const business = usePublicBusiness(fromCatalog);
   const client = state.clients.find((c) => c.id === state.activeClientId) ?? state.clients[0];
   const pets = state.pets.filter((p) => p.clientId === client.id);
   const [petId, setPetId] = useState(pets[0]?.id ?? '');
@@ -29,12 +32,17 @@ export function BookingPage() {
   const [error, setError] = useState('');
   const [created, setCreated] = useState('');
   const pet = pets.find((p) => p.id === petId);
-  const services = state.services.filter(
+  const publishedServices = business.data?.services.map((service) => ({
+    ...service,
+    active: true,
+  }));
+  const catalog = fromCatalog ? (publishedServices ?? []) : state.services;
+  const services = catalog.filter(
     (s) =>
       s.active &&
       pet &&
       s.species.includes(pet.species) &&
-      state.settings.species.includes(pet.species),
+      (fromCatalog || state.settings.species.includes(pet.species)),
   );
   const service = services.find((s) => s.id === serviceId);
   const slots = service ? availableSlots(state, day, service) : [];
@@ -187,7 +195,11 @@ export function BookingPage() {
                   </strong>
                 </button>
               ))}
-              {pet && !services.length && (
+              {fromCatalog && business.isPending && <Notice>Cargando servicios…</Notice>}
+              {fromCatalog && business.isError && (
+                <Notice>No se pudieron cargar los servicios del catálogo.</Notice>
+              )}
+              {pet && !services.length && (!fromCatalog || business.isSuccess) && (
                 <Notice>
                   No hay servicios publicados para esta especie. Lya puede ajustarlos desde el
                   panel.
