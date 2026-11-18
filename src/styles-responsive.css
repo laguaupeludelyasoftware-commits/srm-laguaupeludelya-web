@@ -372,20 +372,23 @@
   }
 
   .sidebar nav {
-    padding-bottom: 4px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 7px;
-    scrollbar-width: thin;
   }
 
   .sidebar nav a {
     min-height: 46px;
     font-size: 0.78rem;
-    padding: 10px 12px;
+    padding: 8px;
     gap: 8px;
+    white-space: normal;
+    min-width: 0;
   }
 
   .sidebar nav a svg {
     width: 18px;
+    flex-shrink: 0;
   }
 
   .management-main .page-heading > .button,

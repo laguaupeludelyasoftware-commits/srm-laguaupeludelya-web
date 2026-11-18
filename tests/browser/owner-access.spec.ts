@@ -1,5 +1,42 @@
 import { expect, test } from '@playwright/test';
 
+test('mantiene visible la navegación mientras vuelve a comprobar la sesión', async ({ page }) => {
+  await page.addInitScript(() => sessionStorage.setItem('guaupelu-owner-session', 'owner-test'));
+  let release: () => void = () => {};
+  const recheck = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let holdCheck = false;
+  await page.route('**/api/management/session', async (route) => {
+    if (!holdCheck) return route.fulfill({ status: 204 });
+    await recheck;
+    await route.fulfill({ status: 403 });
+  });
+  await page.route('**/api/management/services', (route) => route.fulfill({ json: [] }));
+  try {
+    await page.goto('/gestion');
+    const navigation = page.getByRole('navigation', { name: 'Gestión' });
+    await navigation.evaluate((element) => element.setAttribute('data-mounted', 'original'));
+    if ((page.viewportSize()?.width ?? 1440) <= 640) {
+      const fits = await navigation.evaluate(
+        (element) => element.scrollWidth <= element.clientWidth,
+      );
+      expect(fits).toBe(true);
+      await expect(navigation.getByRole('link')).toHaveCount(4);
+    }
+    holdCheck = true;
+    const check = page.waitForRequest('**/api/management/session', { timeout: 10000 });
+    await navigation.getByRole('link', { name: 'Servicios y tarifas' }).click();
+    await check;
+    await expect(navigation).toBeVisible();
+    await expect(navigation).toHaveAttribute('data-mounted', 'original');
+    await expect(page.getByText('Comprobando sesión…')).toHaveCount(0);
+  } finally {
+    release();
+  }
+  await expect(page).toHaveURL(/\/acceso-gestion$/);
+});
+
 test('protege la configuración y actualiza el contacto de la landing', async ({ page }) => {
   let contact = { phone: '746044453', address: 'C/ Dionisio Acedo n.º 6' };
   await page.route('**/api/public/business', (route) =>

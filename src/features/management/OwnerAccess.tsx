@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Button, Field, Notice } from '../../components/ui';
 
@@ -27,12 +27,15 @@ export function OwnerLogout() {
   return (
     <Button
       type="button"
+      variant="outline"
+      size="small"
+      aria-label="Cerrar sesión"
       onClick={() => {
         sessionStorage.removeItem(sessionKey);
         navigate('/acceso-gestion', { replace: true });
       }}
     >
-      Cerrar sesión
+      Salir
     </Button>
   );
 }
@@ -40,9 +43,10 @@ export function OwnerLogout() {
 /** Protege la entrada directa y vuelve a consultar el permiso al cambiar de sección. */
 export function RequireOwner({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
+  const previousPath = useRef(pathname);
   const token = ownerToken();
   const session = useQuery({
-    queryKey: ['sesion-gestion', pathname, token],
+    queryKey: ['sesion-gestion', token],
     queryFn: ({ signal }) => checkOwnerSession(token ?? '', signal),
     enabled: !!token,
     staleTime: 0,
@@ -50,11 +54,17 @@ export function RequireOwner({ children }: { children: ReactNode }) {
     retry: false,
     refetchOnWindowFocus: false,
   });
+  const { refetch } = session;
+  useEffect(() => {
+    if (previousPath.current === pathname) return;
+    previousPath.current = pathname;
+    if (token) void refetch();
+  }, [pathname, refetch, token]);
 
   if (!token || session.data === false) {
     return <Navigate to="/acceso-gestion" replace state={{ from: pathname }} />;
   }
-  if (session.isError) {
+  if (session.isError && session.data === undefined) {
     return (
       <main className="container section" id="main-content">
         <Notice error>No se pudo comprobar la sesión de gestión.</Notice>
@@ -64,7 +74,7 @@ export function RequireOwner({ children }: { children: ReactNode }) {
       </main>
     );
   }
-  if (session.isPending || session.isFetching) {
+  if (session.isPending) {
     return (
       <main className="container section" id="main-content" role="status">
         Comprobando sesión…

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   ArrowUpRight,
@@ -115,12 +115,16 @@ const managementLinks = [
 
 /** Panel adaptable: navegación lateral en escritorio y horizontal en dispositivos pequeños. */
 export function ManagementLayout() {
+  const { pathname } = useLocation();
   return (
     <>
       <DemoBanner />
       <div className="management-layout">
         <aside className="sidebar">
-          <Brand />
+          <div className="management-header">
+            <Brand />
+            <OwnerLogout />
+          </div>
           <div className="workspace-label">TU PEQUEÑO GRAN ESPACIO</div>
           <nav aria-label="Gestión">
             {managementLinks.map((item) => (
@@ -145,8 +149,17 @@ export function ManagementLayout() {
           </div>
         </aside>
         <main id="main-content" className="management-main">
-          <OwnerLogout />
-          <Outlet />
+          <Suspense
+            fallback={
+              <p className="management-section-loading" role="status">
+                Cargando sección…
+              </p>
+            }
+          >
+            <div className="management-section" key={pathname}>
+              <Outlet />
+            </div>
+          </Suspense>
         </main>
       </div>
     </>
