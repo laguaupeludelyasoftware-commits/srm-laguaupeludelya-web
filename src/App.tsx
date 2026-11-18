@@ -17,6 +17,9 @@ const ClientAccess = lazy(() =>
 const ClientAccount = lazy(() =>
   import('./features/customer/ClientAccount').then((m) => ({ default: m.ClientAccount })),
 );
+const ClientBooking = lazy(() =>
+  import('./features/customer/ClientAccount').then((m) => ({ default: m.ClientBooking })),
+);
 const CustomerPage = lazy(() =>
   import('./features/customer/CustomerPage').then((m) => ({ default: m.CustomerPage })),
 );
@@ -70,8 +73,7 @@ export function App() {
                   <Route path="registro" element={<ClientAccess key="register" register />} />
                   <Route path="iniciar-sesion" element={<ClientAccess key="login" />} />
                   <Route path="mi-espacio" element={<ClientAccount />} />
-                  <Route path="demo/mi-espacio" element={<CustomerPage />} />
-                  <Route path="reservar" element={<BookingPage />} />
+                  <Route path="reservar" element={<ClientBooking />} />
                   <Route
                     path="*"
                     element={
@@ -102,6 +104,8 @@ export function App() {
                   <Route index element={<AgendaPage />} />
                   <Route path="clientes" element={<RegisteredClientsPage />} />
                   <Route path="demo/clientes" element={<ClientsPage />} />
+                  <Route path="demo/reservar" element={<BookingPage />} />
+                  <Route path="demo/mi-espacio" element={<CustomerPage />} />
                   <Route path="servicios" element={<CatalogPage />} />
                   <Route path="configuracion" element={<SettingsPage />} />
                 </Route>

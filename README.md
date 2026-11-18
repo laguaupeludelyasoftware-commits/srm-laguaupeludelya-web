@@ -27,8 +27,8 @@ Las pruebas usan el ejecutor nativo de Node y su soporte experimental de TypeScr
 
 - `/`: landing con logotipo facilitado, ilustración vectorial propia y contenido propuesto.
 - `/registro` e `/iniciar-sesion`: alta y acceso de clientes mediante la API. La primera fase permite entrar con el correo pendiente de verificar.
-- `/mi-espacio`: perfil de la cuenta autenticada y alta, consulta y edición de sus mascotas en la API. `/demo/mi-espacio` acompaña las citas de ejemplo.
-- `/reservar`: mascota, cuidado, fecha/hora y confirmación. Tras confirmar, la cita aparece en ambas áreas.
+- `/mi-espacio`: perfil de la cuenta autenticada y alta, consulta y edición de sus mascotas en la API.
+- `/reservar`: exige una cuenta de cliente y conserva el servicio seleccionado al pasar por el registro o el inicio de sesión. Las citas reales se mantienen cerradas durante esta fase. El asistente de demostración se abre desde la agenda privada de gestión.
 - `/gestion`: agenda con día, semana y mes; detalle para rechazo con motivo, asistencia y validación. La asistencia solo se habilita al comenzar la cita y la no presentación al terminar su duración prevista.
 - `/gestion/clientes`: directorio de clientes registrados y edición de las mismas mascotas que aparecen en Mi espacio. El filtro de revisión y el historial de ejemplo pertenecen al recorrido de la agenda de demostración.
 - `/gestion/servicios`: alta, edición y desactivación de servicios base mediante la API. La landing y el formulario consultan los servicios publicados. Editar el catálogo conserva el precio y la duración de las citas de ejemplo ya creadas.

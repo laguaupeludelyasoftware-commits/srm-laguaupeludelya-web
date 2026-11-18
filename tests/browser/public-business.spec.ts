@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 
-test('muestra el contacto publicado y preselecciona un servicio del backend', async ({ page }) => {
+test('pide una cuenta para reservar y conserva el servicio elegido al registrarse', async ({
+  page,
+}) => {
   await page.route('**/api/public/business', (route) =>
     route.fulfill({
       json: {
@@ -25,7 +27,32 @@ test('muestra el contacto publicado y preselecciona un servicio del backend', as
   );
   await expect(page.getByText('C/ Dionisio Acedo n.º 6')).toBeVisible();
   await page.getByRole('link', { name: 'Reservar Baño publicado' }).click();
-  await expect(page.getByRole('button', { name: /Baño publicado/ })).toHaveClass(/selected/);
+  await expect(page).toHaveURL(/\/iniciar-sesion$/);
+  await expect(page.getByText('Clara', { exact: true })).toHaveCount(0);
+  await page.route('**/api/auth/register', (route) =>
+    route.fulfill({ json: { token: 'booking-test' } }),
+  );
+  await page.route('**/api/auth/client/me', (route) =>
+    route.fulfill({
+      json: { name: 'Clara Prueba', email: 'clara@example.com', emailVerified: false },
+    }),
+  );
+  await page.getByRole('link', { name: 'Crear una cuenta' }).click();
+  await page.getByLabel('Tu nombre').fill('Clara Prueba');
+  await page.getByLabel('Correo electrónico').fill('clara@example.com');
+  await page.getByLabel('Contraseña').fill('client-test-password');
+  await page.getByRole('button', { name: 'Crear cuenta' }).click();
+  await expect(page).toHaveURL(/\/reservar\?servicio=bano-publicado$/);
+  await expect(page.getByRole('heading', { name: 'Baño publicado' })).toBeVisible();
+  await expect(page.getByText(/Necesitarás verificar tu correo/)).toBeVisible();
+  await expect(page.getByRole('button', { name: /Confirmar reserva/ })).toHaveCount(0);
+});
+
+test('protege el acceso directo al asistente de demostración', async ({ page }) => {
+  await page.goto('/gestion/demo/reservar');
+  await expect(page).toHaveURL(/\/acceso-gestion$/);
+  await page.goto('/demo/mi-espacio');
+  await expect(page.getByText('La página que buscas no existe.')).toBeVisible();
 });
 
 test('distingue un catálogo vacío de una API no disponible', async ({ page }) => {

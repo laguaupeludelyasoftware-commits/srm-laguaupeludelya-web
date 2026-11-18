@@ -225,7 +225,7 @@ export function LandingPage() {
             },
             {
               title: 'Eliges su momento',
-              text: 'Consulta los servicios publicados y explora cómo funcionará la reserva.',
+              text: 'Consulta los servicios publicados. La reserva online estará disponible tras habilitar la verificación de correo.',
             },
             {
               title: 'Nos vemos en la pelu',
@@ -271,10 +271,10 @@ export function LandingPage() {
         <div className="contact-card">
           <PawPrint size={32} strokeWidth={1.3} />
           <h3>Reserva un ratito para él.</h3>
-          <p>Puedes explorar cómo será su próxima visita en esta demostración.</p>
+          <p>Puedes crear tu cuenta y añadir tus mascotas desde Mi espacio.</p>
           <Button asChild>
             <Link to="/reservar">
-              Explorar la reserva <ArrowUpRight size={18} />
+              Consultar reservas <ArrowUpRight size={18} />
             </Link>
           </Button>
           <small>Sin citas reales ni envío de mensajes.</small>

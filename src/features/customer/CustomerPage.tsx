@@ -64,7 +64,7 @@ export function CustomerPage() {
           <p className="muted">Sus cuidados, sus visitas y todos sus pequeños detalles.</p>
         </div>
         <Button asChild>
-          <Link to="/reservar">
+          <Link to="/gestion/demo/reservar">
             <Plus size={17} /> Reservar una cita
           </Link>
         </Button>
@@ -97,7 +97,7 @@ export function CustomerPage() {
               title="Su primer mimo está por llegar"
               action={
                 <Button asChild size="small">
-                  <Link to="/reservar">Buscar un hueco</Link>
+                  <Link to="/gestion/demo/reservar">Buscar un hueco</Link>
                 </Button>
               }
             >

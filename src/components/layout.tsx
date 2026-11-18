@@ -48,9 +48,6 @@ export function PublicLayout() {
   useEffect(() => setMenu(false), [location]);
   return (
     <>
-      {(location.pathname === '/reservar' || location.pathname.startsWith('/demo/')) && (
-        <DemoBanner />
-      )}
       <header className="public-header">
         <div className="container header-inner">
           <Brand />
@@ -88,7 +85,7 @@ export function PublicLayout() {
           <Brand />
           <p>Pequeños cuidados. Grandes vínculos.</p>
         </div>
-        <div className="container footer-note">La reserva de citas está en demostración.</div>
+        <div className="container footer-note">Las reservas online se abrirán más adelante.</div>
       </footer>
     </>
   );

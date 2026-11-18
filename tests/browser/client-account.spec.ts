@@ -25,6 +25,9 @@ test('registra, cierra sesión y vuelve a entrar sin verificar el correo', async
   await page.getByLabel('Contraseña').fill('client-test-password');
   await page.getByRole('button', { name: 'Crear cuenta' }).click();
   await expect(page.getByRole('heading', { name: 'Hola, Clara Prueba' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Mi perfil' })).toBeVisible();
+  await expect(page.getByText('Correo electrónico: clara@example.com')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Mis mascotas' })).toBeVisible();
   await expect(page.getByText('Verificación de correo pendiente.')).toBeVisible();
   await page.getByRole('button', { name: 'Cerrar sesión' }).click();
   await expect(page).toHaveURL(/\/iniciar-sesion$/);

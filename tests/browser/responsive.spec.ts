@@ -71,7 +71,7 @@ test('reserva completa y cancelación desde el área cliente', async ({ page }) 
       },
     }),
   );
-  await page.goto('/reservar');
+  await page.goto('/gestion/demo/reservar');
   await page.getByRole('button', { name: /Baño y mimos/ }).click();
   await page.getByRole('button', { name: 'Continuar', exact: true }).click();
   await expect(page.getByText('Encontramos su huequito')).toBeVisible();

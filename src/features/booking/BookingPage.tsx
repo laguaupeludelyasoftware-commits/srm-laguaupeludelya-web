@@ -85,7 +85,7 @@ export function BookingPage() {
           el panel de Nazaret.
         </Notice>
         <Button asChild>
-          <Link to="/demo/mi-espacio">
+          <Link to="/gestion/demo/mi-espacio">
             Ver mis citas <ArrowRight size={17} />
           </Link>
         </Button>
@@ -115,7 +115,7 @@ export function BookingPage() {
       {block && (
         <Notice error>
           {block}{' '}
-          <Link to="/demo/mi-espacio" className="inline-link">
+          <Link to="/gestion/demo/mi-espacio" className="inline-link">
             Ir a mi espacio
           </Link>
         </Notice>

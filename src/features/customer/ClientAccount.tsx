@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Field, Notice } from '../../components/ui';
+import { usePublicBusiness } from '../../data/public-business';
+import { euros } from '../../domain/rules';
 import { ClientPets } from './ClientPets';
 
 const sessionKey = 'guaupelu-client-session';
@@ -15,6 +17,12 @@ interface ClientProfile {
 /** Registro y entrada de clientes mediante correo y contraseña. */
 export function ClientAccess({ register = false }: { register?: boolean }) {
   const navigate = useNavigate();
+  const { state } = useLocation();
+  const returnTo: unknown = state?.returnTo;
+  const destination =
+    typeof returnTo === 'string' && /^\/reservar(?:\?[^#]*)?$/.test(returnTo)
+      ? returnTo
+      : '/mi-espacio';
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
 
@@ -55,7 +63,7 @@ export function ClientAccess({ register = false }: { register?: boolean }) {
       const { token } = await response.json();
       if (typeof token !== 'string' || !token) throw new Error();
       sessionStorage.setItem(sessionKey, token);
-      navigate('/mi-espacio', { replace: true });
+      navigate(destination, { replace: true });
     } catch {
       setError('No se pudo completar la solicitud. Vuelve a intentarlo.');
     } finally {
@@ -107,7 +115,11 @@ export function ClientAccess({ register = false }: { register?: boolean }) {
             {pending ? 'Un momento…' : register ? 'Crear cuenta' : 'Entrar'}
           </Button>
         </form>
-        <Link className="inline-link" to={register ? '/iniciar-sesion' : '/registro'}>
+        <Link
+          className="inline-link"
+          to={register ? '/iniciar-sesion' : '/registro'}
+          state={{ returnTo: destination }}
+        >
           {register ? 'Ya tengo cuenta' : 'Crear una cuenta'}
         </Link>
       </div>
@@ -115,11 +127,9 @@ export function ClientAccess({ register = false }: { register?: boolean }) {
   );
 }
 
-/** Lee el perfil de la cuenta autenticada. El prototipo de reservas tiene su propio recorrido. */
-export function ClientAccount() {
-  const navigate = useNavigate();
-  const token = sessionStorage.getItem(sessionKey);
-  const profile = useQuery({
+/** Comprueba la sesión y lee los datos de la cuenta autenticada. */
+function useClientProfile(token: string | null) {
+  return useQuery({
     queryKey: ['client-profile', token],
     enabled: !!token,
     gcTime: 0,
@@ -134,6 +144,13 @@ export function ClientAccount() {
       return response.json();
     },
   });
+}
+
+/** Presenta los datos de la cuenta y sus mascotas vinculadas. */
+export function ClientAccount() {
+  const navigate = useNavigate();
+  const token = sessionStorage.getItem(sessionKey);
+  const profile = useClientProfile(token);
   if (!token || profile.data === null) return <Navigate to="/iniciar-sesion" replace />;
 
   return (
@@ -149,7 +166,8 @@ export function ClientAccount() {
         <>
           <div className="panel settings-panel">
             <h1>Hola, {profile.data.name}</h1>
-            <p>{profile.data.email}</p>
+            <h2>Mi perfil</h2>
+            <p>Correo electrónico: {profile.data.email}</p>
             <p>
               {profile.data.emailVerified
                 ? 'Correo verificado.'
@@ -168,5 +186,60 @@ export function ClientAccount() {
         </>
       )}
     </section>
+  );
+}
+
+/** Protege el acceso público a reservas y conserva el servicio elegido durante el registro. */
+export function ClientBooking() {
+  const location = useLocation();
+  const token = sessionStorage.getItem(sessionKey);
+  const profile = useClientProfile(token);
+  if (!token || profile.data === null) {
+    return (
+      <Navigate
+        to="/iniciar-sesion"
+        replace
+        state={{ returnTo: location.pathname + location.search }}
+      />
+    );
+  }
+  return (
+    <section className="container section">
+      {profile.isPending && <p role="status">Comprobando tu cuenta…</p>}
+      {profile.isError && (
+        <>
+          <Notice error>No se pudo comprobar tu cuenta.</Notice>
+          <Button onClick={() => void profile.refetch()}>Reintentar</Button>
+        </>
+      )}
+      {profile.isSuccess && profile.data && <BookingStatus account={profile.data} />}
+    </section>
+  );
+}
+
+function BookingStatus({ account }: { account: ClientProfile }) {
+  const [params] = useSearchParams();
+  const catalog = usePublicBusiness();
+  const service = catalog.data?.services.find((entry) => entry.id === params.get('servicio'));
+  return (
+    <div className="panel settings-panel">
+      <h1>Reservar cita</h1>
+      {service && (
+        <>
+          <h2>{service.name}</h2>
+          <p>
+            {service.duration} min · desde {euros(service.price)}
+          </p>
+        </>
+      )}
+      <Notice>
+        {account.emailVerified
+          ? 'Las reservas online todavía no están disponibles.'
+          : 'Necesitarás verificar tu correo para reservar. La verificación por correo aún no está disponible.'}
+      </Notice>
+      <Button asChild>
+        <Link to="/mi-espacio">Ir a mi perfil y mascotas</Link>
+      </Button>
+    </div>
   );
 }

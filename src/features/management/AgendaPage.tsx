@@ -90,7 +90,7 @@ export function AgendaPage() {
         description="Un vistazo a los pequeños que vienen a verte."
         action={
           <Button asChild>
-            <Link to="/reservar">
+            <Link to="/gestion/demo/reservar">
               <Plus size={17} /> Probar nueva reserva
             </Link>
           </Button>
