@@ -5,6 +5,8 @@ import { PageHeading } from '../../components/layout';
 import { Button, Field, Modal, Notice } from '../../components/ui';
 import { useDemo } from '../../data/demo-store';
 import type { Species } from '../../domain/models';
+import { BusinessContactForm } from './BusinessContactForm';
+import { OwnerPasswordForm } from './OwnerPasswordForm';
 
 /** Horarios simples de ejemplo y política inicial visibles para la dueña. */
 export function SettingsPage() {
@@ -54,6 +56,8 @@ export function SettingsPage() {
       />
       {message && <Notice>{message}</Notice>}
       {error && <Notice error>{error}</Notice>}
+      <BusinessContactForm />
+      <OwnerPasswordForm />
       <form onSubmit={save} className="settings-grid">
         <section className="panel settings-panel">
           <span className="eyebrow">UN RATITO PARA CADA UNO</span>

@@ -120,7 +120,7 @@ export function AgendaPage() {
             </strong>
           </div>
         </div>
-        <Link className="stat-card stat-link" to="/gestion/clientes?revision=1">
+        <Link className="stat-card stat-link" to="/gestion/demo/clientes?revision=1">
           <span className="stat-icon lavender">
             <ShieldCheck size={21} />
           </span>

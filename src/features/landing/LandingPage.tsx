@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../../components/ui';
 import { usePublicBusiness } from '../../data/public-business';
+import { euros } from '../../domain/rules';
 
 /** Presentación pública con el contacto y catálogo publicados por el negocio. */
 export function LandingPage() {
@@ -151,10 +152,10 @@ export function LandingPage() {
                 <p>{service.description}</p>
                 <div className="service-card-bottom">
                   <span>
-                    {service.duration} min · <strong>desde {service.price} €</strong>
+                    {service.duration} min · <strong>desde {euros(service.price)}</strong>
                   </span>
                   <Link
-                    to={`/reservar?${new URLSearchParams({ servicio: service.id, origen: 'catalogo' })}`}
+                    to={`/reservar?${new URLSearchParams({ servicio: service.id })}`}
                     aria-label={`Reservar ${service.name}`}
                     className="round-link"
                   >
@@ -198,8 +199,9 @@ export function LandingPage() {
               Un espacio pensado para los pequeños detalles y para que su próxima visita empiece con
               confianza.
             </p>
+            <p>Lya fue la perra de Nazaret e inspiró el nombre y el diseño de la peluquería.</p>
             <div className="philosophy-sign">
-              <span>Lya</span>
+              <span>Nazaret</span>
               <Heart size={19} strokeWidth={1.2} />
               <small>El cariño también está en los detalles.</small>
             </div>
@@ -219,15 +221,15 @@ export function LandingPage() {
           {[
             {
               title: 'Nos conocemos',
-              text: 'Crea tu cuenta, verifica tu correo y cuéntanos un poquito sobre tu compañero.',
+              text: 'Crea tu cuenta de cliente con tu correo y contraseña.',
             },
             {
               title: 'Eliges su momento',
-              text: 'Escoge el cuidado y un hueco disponible. Tu cita quedará confirmada.',
+              text: 'Consulta los servicios publicados y explora cómo funcionará la reserva.',
             },
             {
               title: 'Nos vemos en la pelu',
-              text: 'En la primera visita, Lya validará tu cuenta para tus próximas reservas.',
+              text: 'En la primera visita, Nazaret validará tu cuenta para tus próximas reservas.',
             },
           ].map((step, i) => (
             <div className="landing-step" key={step.title}>

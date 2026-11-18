@@ -26,17 +26,17 @@ Las pruebas usan el ejecutor nativo de Node y su soporte experimental de TypeScr
 ## Recorridos
 
 - `/`: landing con logotipo facilitado, ilustración vectorial propia y contenido propuesto.
-- `/registro`: registro de ejemplo y verificación simulada. No envía correos ni guarda contraseñas.
-- `/mi-espacio`: Clara y Nala son la cuenta inicial de demostración; registro permite crear otra cuenta ficticia. Mascotas, citas y cancelación.
+- `/registro` e `/iniciar-sesion`: alta y acceso de clientes mediante la API. La primera fase permite entrar con el correo pendiente de verificar.
+- `/mi-espacio`: perfil de la cuenta autenticada y alta, consulta y edición de sus mascotas en la API. `/demo/mi-espacio` acompaña las citas de ejemplo.
 - `/reservar`: mascota, cuidado, fecha/hora y confirmación. Tras confirmar, la cita aparece en ambas áreas.
 - `/gestion`: agenda con día, semana y mes; detalle para rechazo con motivo, asistencia y validación. La asistencia solo se habilita al comenzar la cita y la no presentación al terminar su duración prevista.
-- `/gestion/clientes`: búsqueda, filtro de revisión, ficha, mascotas, historial interno de tratamientos y alta manual validada. La invitación es simulada.
-- `/gestion/servicios`: alta/edición/desactivación de servicios, precios base, duración y especies. Editar catálogo no reescribe citas anteriores.
+- `/gestion/clientes`: directorio de clientes registrados y edición de las mismas mascotas que aparecen en Mi espacio. El filtro de revisión y el historial de ejemplo pertenecen al recorrido de la agenda de demostración.
+- `/gestion/servicios`: alta, edición y desactivación de servicios base mediante la API. La landing y el formulario consultan los servicios publicados. Editar el catálogo conserva el precio y la duración de las citas de ejemplo ya creadas.
 - `/gestion/configuracion`: horarios semanales, especies admitidas, antelación para cancelar y restablecimiento de datos.
 
 ## Límites de la demostración
 
-El panel y el área cliente siguen siendo públicos en la demostración. Las fichas y las citas de ese recorrido son ficticias. El catálogo y el contacto de la landing proceden de la API, con un catálogo inicial vacío hasta que se publiquen servicios aprobados.
+El panel exige una cuenta de dueña y se abre desde `/acceso-gestion`. Las fichas y citas de demostración siguen almacenadas en el navegador. El catálogo y el contacto de la landing proceden de la API, con un catálogo inicial vacío hasta que se publiquen servicios aprobados.
 
 Los cambios se almacenan en `localStorage`, clave `lya-demo-v1`. El panel permite restablecer únicamente esa colección. Si el navegador no permite guardar, se muestra un aviso y se sigue en memoria. No introducir información personal ni contraseñas reales.
 

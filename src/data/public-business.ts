@@ -7,10 +7,9 @@ interface PublicBusiness {
 }
 
 /** Comparte la consulta del catálogo publicado entre la landing y su enlace de reserva. */
-export function usePublicBusiness(enabled = true) {
+export function usePublicBusiness() {
   return useQuery({
     queryKey: ['public-business'],
-    enabled,
     queryFn: async ({ signal }): Promise<PublicBusiness> => {
       const response = await fetch('/api/public/business', { signal });
       if (!response.ok) {

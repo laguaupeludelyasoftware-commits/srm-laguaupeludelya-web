@@ -5,13 +5,17 @@ import { lazy, Suspense } from 'react';
 import { DemoProvider } from './data/demo-store';
 import { ManagementLayout, PublicLayout, ScrollToTop } from './components/layout';
 import { EmptyState } from './components/ui';
+import { OwnerAccess, RequireOwner } from './features/management/OwnerAccess';
 
 // Cada área se carga cuando se visita para no descargar el panel al abrir la landing.
 const LandingPage = lazy(() =>
   import('./features/landing/LandingPage').then((m) => ({ default: m.LandingPage })),
 );
-const AccessPage = lazy(() =>
-  import('./features/customer/AccessPage').then((m) => ({ default: m.AccessPage })),
+const ClientAccess = lazy(() =>
+  import('./features/customer/ClientAccount').then((m) => ({ default: m.ClientAccess })),
+);
+const ClientAccount = lazy(() =>
+  import('./features/customer/ClientAccount').then((m) => ({ default: m.ClientAccount })),
 );
 const CustomerPage = lazy(() =>
   import('./features/customer/CustomerPage').then((m) => ({ default: m.CustomerPage })),
@@ -24,6 +28,11 @@ const AgendaPage = lazy(() =>
 );
 const ClientsPage = lazy(() =>
   import('./features/management/ClientsPage').then((m) => ({ default: m.ClientsPage })),
+);
+const RegisteredClientsPage = lazy(() =>
+  import('./features/management/RegisteredClientsPage').then((m) => ({
+    default: m.RegisteredClientsPage,
+  })),
 );
 const CatalogPage = lazy(() =>
   import('./features/management/CatalogPage').then((m) => ({ default: m.CatalogPage })),
@@ -58,8 +67,10 @@ export function App() {
               <Routes>
                 <Route element={<PublicLayout />}>
                   <Route index element={<LandingPage />} />
-                  <Route path="registro" element={<AccessPage />} />
-                  <Route path="mi-espacio" element={<CustomerPage />} />
+                  <Route path="registro" element={<ClientAccess key="register" register />} />
+                  <Route path="iniciar-sesion" element={<ClientAccess key="login" />} />
+                  <Route path="mi-espacio" element={<ClientAccount />} />
+                  <Route path="demo/mi-espacio" element={<CustomerPage />} />
                   <Route path="reservar" element={<BookingPage />} />
                   <Route
                     path="*"
@@ -79,9 +90,18 @@ export function App() {
                     }
                   />
                 </Route>
-                <Route path="gestion" element={<ManagementLayout />}>
+                <Route path="acceso-gestion" element={<OwnerAccess />} />
+                <Route
+                  path="gestion"
+                  element={
+                    <RequireOwner>
+                      <ManagementLayout />
+                    </RequireOwner>
+                  }
+                >
                   <Route index element={<AgendaPage />} />
-                  <Route path="clientes" element={<ClientsPage />} />
+                  <Route path="clientes" element={<RegisteredClientsPage />} />
+                  <Route path="demo/clientes" element={<ClientsPage />} />
                   <Route path="servicios" element={<CatalogPage />} />
                   <Route path="configuracion" element={<SettingsPage />} />
                 </Route>

@@ -12,6 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import { useDemo } from '../data/demo-store';
+import { OwnerLogout } from '../features/management/OwnerAccess';
 import { Button } from './ui';
 
 /** Identidad textual acompañada del logotipo original facilitado para el proyecto. */
@@ -47,7 +48,9 @@ export function PublicLayout() {
   useEffect(() => setMenu(false), [location]);
   return (
     <>
-      <DemoBanner />
+      {(location.pathname === '/reservar' || location.pathname.startsWith('/demo/')) && (
+        <DemoBanner />
+      )}
       <header className="public-header">
         <div className="container header-inner">
           <Brand />
@@ -84,19 +87,14 @@ export function PublicLayout() {
         <div className="container footer-inner">
           <Brand />
           <p>Pequeños cuidados. Grandes vínculos.</p>
-          <Link to="/gestion">
-            Explorar panel de la dueña <ArrowUpRight size={14} />
-          </Link>
         </div>
-        <div className="container footer-note">
-          Prototipo local · Contenido y servicios de ejemplo · Sin reservas ni comunicaciones reales
-        </div>
+        <div className="container footer-note">La reserva de citas está en demostración.</div>
       </footer>
     </>
   );
 }
 
-/** Hace explícito que el selector de áreas no proporciona autenticación real. */
+/** Identifica los datos y operaciones de demostración. */
 export function DemoBanner() {
   const { storageError } = useDemo();
   return (
@@ -107,9 +105,6 @@ export function DemoBanner() {
           ? 'No se pueden guardar cambios: demo en memoria'
           : 'Prototipo · Datos de ejemplo, sin reservas reales'}
       </span>
-      <Link to="/gestion">
-        Vista de la dueña <ArrowUpRight size={12} />
-      </Link>
     </div>
   );
 }
@@ -140,9 +135,9 @@ export function ManagementLayout() {
           </nav>
           <div className="sidebar-bottom">
             <div className="owner-profile">
-              <span className="avatar">L</span>
+              <span className="avatar">N</span>
               <div>
-                <strong>Lya</strong>
+                <strong>Nazaret</strong>
                 <small>Dueña · Modo demostración</small>
               </div>
               <PawPrint size={18} />
@@ -153,6 +148,7 @@ export function ManagementLayout() {
           </div>
         </aside>
         <main id="main-content" className="management-main">
+          <OwnerLogout />
           <Outlet />
         </main>
       </div>

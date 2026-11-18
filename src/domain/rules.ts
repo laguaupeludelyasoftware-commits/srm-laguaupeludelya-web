@@ -77,12 +77,13 @@ export function availableSlots(
   return slots;
 }
 
-/** Presenta cantidades estimadas de demostración en euros sin decimales superfluos. */
+/** Presenta cantidades en euros conservando los céntimos cuando corresponden. */
 export function euros(value: number): string {
   return new Intl.NumberFormat('es-ES', {
     style: 'currency',
     currency: 'EUR',
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
   }).format(value);
 }
 

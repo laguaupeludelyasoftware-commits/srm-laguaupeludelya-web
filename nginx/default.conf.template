@@ -12,7 +12,7 @@ server {
         return 200 'ok';
     }
 
-    location = /api/public/business {
+    location ~ ^/api/(public/business|auth/(login|register|client/(login|me|pets(/[^/]+)?))|management/(session|contact|password|services(/[^/]+)?|clients(/[^/]+/pets(/[^/]+)?)?))$ {
         set $backend_url "${BACKEND_URL}";
         if ($backend_url = '') { return 503; }
 

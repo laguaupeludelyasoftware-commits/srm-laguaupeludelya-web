@@ -1,6 +1,11 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => sessionStorage.setItem('guaupelu-owner-session', 'test-owner'));
+  await page.route('**/api/management/session', (route) => route.fulfill({ status: 204 }));
+});
+
 /** Comprueba el documento, permitiendo scroll horizontal solo dentro de agenda o tabla. */
 async function expectNoPageOverflow(page: Page) {
   const sizes = await page.evaluate(() => ({
@@ -43,12 +48,29 @@ test('pantallas principales sin errores ni desbordamiento de página', async ({
   if (await menu.isVisible()) {
     await menu.click();
     await page.getByRole('link', { name: 'Mi espacio', exact: true }).click();
-    await expect(page).toHaveURL(/mi-espacio/);
+    await expect(page).toHaveURL(/iniciar-sesion/);
     await expect(page.locator('h1')).toBeVisible();
   }
 });
 
 test('reserva completa y cancelación desde el área cliente', async ({ page }) => {
+  await page.route('**/api/public/business', (route) =>
+    route.fulfill({
+      json: {
+        contact: null,
+        services: [
+          {
+            id: 'service-1',
+            name: 'Baño y mimos',
+            description: 'Baño y secado',
+            species: ['Perro'],
+            price: 25,
+            duration: 60,
+          },
+        ],
+      },
+    }),
+  );
   await page.goto('/reservar');
   await page.getByRole('button', { name: /Baño y mimos/ }).click();
   await page.getByRole('button', { name: 'Continuar', exact: true }).click();
@@ -72,7 +94,7 @@ test('reserva completa y cancelación desde el área cliente', async ({ page }) 
 });
 
 test('clientes accesibles y formulario sin zoom de iOS', async ({ page }, testInfo) => {
-  await page.goto('/gestion/clientes');
+  await page.goto('/gestion/demo/clientes');
   const mobile = (testInfo.project.use.viewport?.width ?? 1440) <= 640;
   await page
     .getByRole('button', { name: mobile ? 'Ver ficha de Clara' : 'Ver ficha', exact: true })

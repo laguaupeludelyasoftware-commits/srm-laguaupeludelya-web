@@ -214,7 +214,7 @@ export function ClientsPage() {
             </div>
             {selected.validatedAt && (
               <small className="muted">
-                Validado por Lya · {appointmentDate(selected.validatedAt)}
+                Validado por Nazaret · {appointmentDate(selected.validatedAt)}
               </small>
             )}
             {!selected.validated && (

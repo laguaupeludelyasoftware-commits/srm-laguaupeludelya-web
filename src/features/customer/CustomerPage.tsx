@@ -41,10 +41,10 @@ export function CustomerPage() {
         customer.cancellations++;
         if (!timely)
           customer.reviewReason =
-            'Cancelación fuera de plazo. Contacta con Lya para volver a reservar.';
+            'Cancelación fuera de plazo. Contacta con Nazaret para volver a reservar.';
         else if (customer.cancellations >= 2)
           customer.reviewReason =
-            'Dos cancelaciones. Lya debe revisar tu cuenta para volver a reservar.';
+            'Dos cancelaciones. Nazaret debe revisar tu cuenta para volver a reservar.';
       }
     });
     setCancel(null);
@@ -134,7 +134,7 @@ export function CustomerPage() {
             <h3>{client.validated ? 'Ya sois de la familia' : 'Vuestra primera visita'}</h3>
             <p>
               {client.validated
-                ? 'Lya ha validado tu cuenta. Puedes reservar nuevas visitas.'
+                ? 'Nazaret ha validado tu cuenta. Puedes reservar nuevas visitas.'
                 : 'Hasta conoceros en persona, podéis tener una única cita futura activa.'}
             </p>
             <div className="policy-counter">
@@ -193,7 +193,7 @@ export function CustomerPage() {
             </Notice>
             {!client.validated && (
               <p>
-                Esta será tu cancelación número {client.cancellations + 1}. Tras la segunda, Lya
+                Esta será tu cancelación número {client.cancellations + 1}. Tras la segunda, Nazaret
                 deberá revisar tu cuenta.
               </p>
             )}

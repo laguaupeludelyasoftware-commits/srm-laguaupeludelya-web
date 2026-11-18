@@ -68,7 +68,7 @@ export function AppointmentDialog({
       const c = draft.clients.find((c) => c.id === appointment.clientId);
       if (!a || !c) return;
       a.status = 'absent';
-      if (!c.validated) c.reviewReason = 'No presentación. Necesita revisión de Lya.';
+      if (!c.validated) c.reviewReason = 'No presentación. Necesita revisión de Nazaret.';
     });
     onClose();
   }

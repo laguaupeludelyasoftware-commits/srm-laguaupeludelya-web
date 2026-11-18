@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Check, CheckCircle2, Clock3, PawPrint, Plus } fr
 import { Button, EmptyState, Field, Modal, Notice } from '../../components/ui';
 import { useDemo } from '../../data/demo-store';
 import { usePublicBusiness } from '../../data/public-business';
+import type { Appointment } from '../../domain/models';
 import {
   addDays,
   appointmentDate,
@@ -19,8 +20,7 @@ import { PetForm } from '../customer/PetForm';
 export function BookingPage() {
   const { state, update } = useDemo();
   const [params] = useSearchParams();
-  const fromCatalog = params.get('origen') === 'catalogo';
-  const business = usePublicBusiness(fromCatalog);
+  const business = usePublicBusiness();
   const client = state.clients.find((c) => c.id === state.activeClientId) ?? state.clients[0];
   const pets = state.pets.filter((p) => p.clientId === client.id);
   const [petId, setPetId] = useState(pets[0]?.id ?? '');
@@ -30,20 +30,13 @@ export function BookingPage() {
   const [time, setTime] = useState('');
   const [addPet, setAddPet] = useState(false);
   const [error, setError] = useState('');
-  const [created, setCreated] = useState('');
+  const [created, setCreated] = useState<Appointment | null>(null);
   const pet = pets.find((p) => p.id === petId);
   const publishedServices = business.data?.services.map((service) => ({
     ...service,
     active: true,
   }));
-  const catalog = fromCatalog ? (publishedServices ?? []) : state.services;
-  const services = catalog.filter(
-    (s) =>
-      s.active &&
-      pet &&
-      s.species.includes(pet.species) &&
-      (fromCatalog || state.settings.species.includes(pet.species)),
-  );
+  const services = (publishedServices ?? []).filter((s) => pet && s.species.includes(pet.species));
   const service = services.find((s) => s.id === serviceId);
   const slots = service ? availableSlots(state, day, service) : [];
   const block = reservationBlock(client, state.appointments);
@@ -55,23 +48,21 @@ export function BookingPage() {
       setError(reason || 'Ese hueco ya no está disponible. Elige otro.');
       return;
     }
-    const id = crypto.randomUUID();
-    update((draft) =>
-      draft.appointments.push({
-        id,
-        clientId: client.id,
-        petId: pet.id,
-        serviceId: service.id,
-        serviceName: service.name,
-        startsAt: localDate(day, time).toISOString(),
-        duration: service.duration,
-        price: service.price,
-        status: 'confirmed',
-        reason: '',
-        treatment: '',
-      }),
-    );
-    setCreated(id);
+    const appointment: Appointment = {
+      id: crypto.randomUUID(),
+      clientId: client.id,
+      petId: pet.id,
+      serviceId: service.id,
+      serviceName: service.name,
+      startsAt: localDate(day, time).toISOString(),
+      duration: service.duration,
+      price: service.price,
+      status: 'confirmed',
+      reason: '',
+      treatment: '',
+    };
+    update((draft) => draft.appointments.push(appointment));
+    setCreated(appointment);
   }
   if (created)
     return (
@@ -83,18 +74,18 @@ export function BookingPage() {
         <h1>¡Un mimo en camino!</h1>
         <p>{pet?.name} ya tiene su pequeño momento reservado.</p>
         <div className="panel success-summary">
-          <h3>{service?.name}</h3>
-          <p>{appointmentDate(localDate(day, time).toISOString())}</p>
+          <h3>{created.serviceName}</h3>
+          <p>{appointmentDate(created.startsAt)}</p>
           <span>
-            {service?.duration} min · {service && euros(service.price)} orientativos
+            {created.duration} min · {euros(created.price)} orientativos
           </span>
         </div>
         <Notice>
           No se ha creado una cita real ni enviado un correo. Puedes verla en el área cliente y en
-          el panel de Lya.
+          el panel de Nazaret.
         </Notice>
         <Button asChild>
-          <Link to="/mi-espacio">
+          <Link to="/demo/mi-espacio">
             Ver mis citas <ArrowRight size={17} />
           </Link>
         </Button>
@@ -107,12 +98,7 @@ export function BookingPage() {
         <h1>
           Vamos a reservar <em>su mimo.</em>
         </h1>
-        <p className="muted">
-          Estás explorando como {client.name}.{' '}
-          <Link to="/registro" className="inline-link">
-            Crear otra cuenta de ejemplo
-          </Link>
-        </p>
+        <p className="muted">Estás explorando como {client.name} en la demostración de reservas.</p>
       </div>
       <div className="booking-progress" aria-label="Progreso de reserva">
         {['Su cuidado', 'Su momento', 'Todo listo'].map((label, i) => (
@@ -129,7 +115,7 @@ export function BookingPage() {
       {block && (
         <Notice error>
           {block}{' '}
-          <Link to="/mi-espacio" className="inline-link">
+          <Link to="/demo/mi-espacio" className="inline-link">
             Ir a mi espacio
           </Link>
         </Notice>
@@ -195,13 +181,13 @@ export function BookingPage() {
                   </strong>
                 </button>
               ))}
-              {fromCatalog && business.isPending && <Notice>Cargando servicios…</Notice>}
-              {fromCatalog && business.isError && (
+              {business.isPending && <Notice>Cargando servicios…</Notice>}
+              {business.isError && (
                 <Notice>No se pudieron cargar los servicios del catálogo.</Notice>
               )}
-              {pet && !services.length && (!fromCatalog || business.isSuccess) && (
+              {pet && !services.length && business.isSuccess && (
                 <Notice>
-                  No hay servicios publicados para esta especie. Lya puede ajustarlos desde el
+                  No hay servicios publicados para esta especie. Nazaret puede ajustarlos desde el
                   panel.
                 </Notice>
               )}
@@ -259,7 +245,7 @@ export function BookingPage() {
                 <strong>{service && euros(service.price)}</strong>
               </div>
               <Notice>
-                Primera visita: Lya validará tu cuenta cuando os conozca en la peluquería.
+                Primera visita: Nazaret validará tu cuenta cuando os conozca en la peluquería.
               </Notice>
               <p className="muted">
                 Cancela con al menos {state.settings.cancellationHours} horas de antelación. Tras la
