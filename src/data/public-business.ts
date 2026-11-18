@@ -12,8 +12,7 @@ export function usePublicBusiness(enabled = true) {
     queryKey: ['public-business'],
     enabled,
     queryFn: async ({ signal }): Promise<PublicBusiness> => {
-      const baseUrl = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/+$/, '');
-      const response = await fetch(`${baseUrl}/api/public/business`, { signal });
+      const response = await fetch('/api/public/business', { signal });
       if (!response.ok) {
         throw new Error('No se pudieron consultar los datos del negocio.');
       }

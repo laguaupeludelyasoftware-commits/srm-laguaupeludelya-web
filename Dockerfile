@@ -3,11 +3,12 @@ WORKDIR /workspace
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-ARG VITE_API_BASE_URL
 RUN npm run build
 
 FROM nginx:stable-alpine
 ENV PORT=8080
+ENV BACKEND_URL=""
+ENV NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1
 COPY nginx/default.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=build /workspace/dist /usr/share/nginx/html
 EXPOSE 8080

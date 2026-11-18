@@ -1,4 +1,4 @@
-# La imagen oficial sustituye PORT al arrancar. Las variables Nginx permanecen intactas.
+# La imagen oficial inserta las variables del entorno y los resolutores del contenedor.
 server {
     listen ${PORT};
     server_name _;
@@ -10,6 +10,17 @@ server {
         access_log off;
         default_type text/plain;
         return 200 'ok';
+    }
+
+    location = /api/public/business {
+        set $backend_url "${BACKEND_URL}";
+        if ($backend_url = '') { return 503; }
+
+        # Resuelve el DNS privado al recibir tráfico y admite direcciones IPv6.
+        resolver ${NGINX_LOCAL_RESOLVERS} valid=30s;
+        resolver_timeout 5s;
+        proxy_connect_timeout 5s;
+        proxy_pass $backend_url$request_uri;
     }
 
     location = /index.html {
