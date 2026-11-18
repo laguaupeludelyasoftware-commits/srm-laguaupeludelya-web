@@ -94,24 +94,6 @@
     overflow-wrap: anywhere;
   }
 
-  .calendar-week {
-    min-width: 840px;
-    overflow: visible;
-  }
-
-  .calendar-week .agenda-appointment {
-    min-height: 100px;
-  }
-
-  .calendar-week .agenda-appointment h3,
-  .calendar-week .appointment-time {
-    font-size: 0.86rem;
-  }
-
-  .calendar-week .agenda-appointment p {
-    font-size: 0.72rem;
-  }
-
   .calendar-swipe-hint {
     display: block;
     padding: 12px 20px;

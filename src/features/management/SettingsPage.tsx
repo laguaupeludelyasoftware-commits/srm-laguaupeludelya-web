@@ -7,6 +7,7 @@ import { useDemo } from '../../data/demo-store';
 import type { Species } from '../../domain/models';
 import { BusinessContactForm } from './BusinessContactForm';
 import { OwnerPasswordForm } from './OwnerPasswordForm';
+import { BusinessHoursForm } from './BusinessHoursForm';
 
 /** Horarios simples de ejemplo y política inicial visibles para la dueña. */
 export function SettingsPage() {
@@ -57,11 +58,12 @@ export function SettingsPage() {
       {message && <Notice>{message}</Notice>}
       {error && <Notice error>{error}</Notice>}
       <BusinessContactForm />
+      <BusinessHoursForm />
       <OwnerPasswordForm />
       <form onSubmit={save} className="settings-grid">
         <section className="panel settings-panel">
           <span className="eyebrow">UN RATITO PARA CADA UNO</span>
-          <h2>Horario de atención</h2>
+          <h2>Horarios de la agenda de demostración</h2>
           <p className="muted">
             Horario provisional, sin descansos ni excepciones por fecha en este prototipo.
           </p>

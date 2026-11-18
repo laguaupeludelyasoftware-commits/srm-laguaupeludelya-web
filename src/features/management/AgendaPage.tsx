@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import {
   CalendarDays,
@@ -16,12 +16,39 @@ import { addDays, dateKey, localDate, statusLabels } from '../../domain/rules';
 import type { Appointment } from '../../domain/models';
 import { AppointmentDialog } from './AppointmentDialog';
 
+const minutesPerDay = 24 * 60;
+const hourHeight = 88;
+
+function startMinute(appointment: Appointment) {
+  const date = new Date(appointment.startsAt);
+  return date.getHours() * 60 + date.getMinutes();
+}
+
+function timeMinute(time: string) {
+  const [hour, minute] = time.split(':').map(Number);
+  return hour * 60 + minute;
+}
+
+/** Asigna carriles para que las citas que coincidan puedan abrirse por separado. */
+function placeAppointments(appointments: Appointment[]) {
+  const laneEnds: number[] = [];
+  const cards = appointments.map((appointment) => {
+    const start = startMinute(appointment);
+    const end = Math.min(minutesPerDay, start + appointment.duration);
+    const freeLane = laneEnds.findIndex((laneEnd) => laneEnd <= start);
+    const lane = freeLane === -1 ? laneEnds.length : freeLane;
+    laneEnds[lane] = end;
+    return { appointment, start, end, lane };
+  });
+  return { cards, lanes: Math.max(1, laneEnds.length) };
+}
+
 /** Agenda de demostración con vistas de día, semana y mes sobre la misma colección local. */
 export function AgendaPage() {
   const { state } = useDemo();
   const today = dateKey(new Date());
   const [day, setDay] = useState(today);
-  const [view, setView] = useState<'day' | 'week' | 'month'>('day');
+  const [view, setView] = useState<'day' | 'week' | 'month'>('week');
   const [selected, setSelected] = useState<string | null>(null);
   const confirmed = state.appointments.filter(
     (a) => a.status === 'confirmed' && dateKey(new Date(a.startsAt)) === day,
@@ -42,6 +69,35 @@ export function AgendaPage() {
         ? 7
         : new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate();
   const days = Array.from({ length: count }, (_, i) => addDays(dateKey(start), i));
+  const columns = days.map((date) => ({
+    date,
+    appointments: state.appointments
+      .filter((appointment) => dateKey(new Date(appointment.startsAt)) === date)
+      .sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
+  }));
+  const openingHours = state.settings.hours.filter((hours) => hours.enabled);
+  const visibleAppointments = columns.flatMap((column) => column.appointments);
+  const rangeStart =
+    Math.floor(
+      Math.min(
+        ...(openingHours.length ? openingHours.map((hours) => timeMinute(hours.start)) : [9 * 60]),
+        ...visibleAppointments.map(startMinute),
+      ) / 60,
+    ) * 60;
+  const rangeEnd = Math.min(
+    minutesPerDay,
+    Math.ceil(
+      Math.max(
+        ...(openingHours.length ? openingHours.map((hours) => timeMinute(hours.end)) : [18 * 60]),
+        ...visibleAppointments.map(
+          (appointment) => startMinute(appointment) + appointment.duration,
+        ),
+      ) / 60,
+    ) * 60,
+  );
+  const hourCount = Math.max(1, (rangeEnd - rangeStart) / 60);
+  const timelineHeight = hourCount * hourHeight;
+  const position = (minute: number) => ((minute - rangeStart) / 60) * hourHeight;
   const activeAppointment = state.appointments.find((a) => a.id === selected) ?? null;
   /** Mueve la fecha según la vista; mes se ancla en día 1 para no saltar meses cortos. */
   function move(direction: number) {
@@ -81,6 +137,38 @@ export function AgendaPage() {
         <ChevronRight size={17} />
       </button>
     );
+  }
+
+  function renderWeekAppointments(appointments: Appointment[]) {
+    const { cards, lanes } = placeAppointments(appointments);
+    return cards.map(({ appointment, start, end, lane }) => {
+      const pet = state.pets.find((entry) => entry.id === appointment.petId);
+      const name = pet?.name || appointment.serviceName;
+      const time = new Date(appointment.startsAt).toLocaleTimeString('es-ES', {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+      return (
+        <button
+          type="button"
+          key={appointment.id}
+          className={`week-appointment agenda-${appointment.status}`}
+          style={{
+            top: position(start),
+            height: position(end) - position(start),
+            left: `calc(${(lane * 100) / lanes}% + 2px)`,
+            width: `calc(${100 / lanes}% - 4px)`,
+          }}
+          onClick={() => setSelected(appointment.id)}
+          aria-label={`${name}, ${time}, ${appointment.duration} min, ${statusLabels[appointment.status]}`}
+        >
+          <strong>{name}</strong>
+          <small>
+            {time} · {appointment.duration} min
+          </small>
+        </button>
+      );
+    });
   }
   return (
     <>
@@ -143,11 +231,17 @@ export function AgendaPage() {
               <ChevronLeft size={19} />
             </Button>
             <h2>
-              {localDate(day).toLocaleDateString('es-ES', {
-                day: view === 'month' ? undefined : 'numeric',
-                month: 'long',
-                year: 'numeric',
-              })}
+              {view === 'week'
+                ? new Intl.DateTimeFormat('es-ES', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                  }).formatRange(start, localDate(days[6]))
+                : localDate(day).toLocaleDateString('es-ES', {
+                    day: view === 'month' ? undefined : 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
             </h2>
             <Button
               variant="ghost"
@@ -216,19 +310,39 @@ export function AgendaPage() {
           aria-label={view === 'week' ? 'Agenda semanal desplazable' : undefined}
           tabIndex={view === 'week' ? 0 : undefined}
         >
-          <div className={`calendar-${view}`}>
-            {days.map((date) => {
-              const appointments = state.appointments
-                .filter((a) => dateKey(new Date(a.startsAt)) === date)
-                .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+          <div
+            className={`calendar-${view}`}
+            style={
+              view === 'week'
+                ? ({ '--week-hour-height': `${hourHeight}px` } as CSSProperties)
+                : undefined
+            }
+          >
+            {view === 'week' && (
+              <div className="week-time-axis" aria-hidden="true">
+                <div className="week-heading">Hora</div>
+                <div className="week-timeline" style={{ height: timelineHeight }}>
+                  {Array.from({ length: hourCount + 1 }, (_, index) => (
+                    <span key={index} className="week-hour" style={{ top: index * hourHeight }}>
+                      {String(rangeStart / 60 + index).padStart(2, '0')}:00
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {columns.map(({ date, appointments }) => {
               return (
                 <div key={date} className={`calendar-day ${date === today ? 'is-today' : ''}`}>
-                  <div className="calendar-day-label">
+                  <div className={`calendar-day-label ${view === 'week' ? 'week-heading' : ''}`}>
                     <span>{localDate(date).toLocaleDateString('es-ES', { weekday: 'long' })}</span>
                     <strong>{localDate(date).getDate()}</strong>
                     {date === today && <small>HOY</small>}
                   </div>
-                  {view === 'day' && !appointments.length ? (
+                  {view === 'week' ? (
+                    <div className="week-timeline" style={{ height: timelineHeight }}>
+                      {renderWeekAppointments(appointments)}
+                    </div>
+                  ) : view === 'day' && !appointments.length ? (
                     <EmptyState title="Un día con espacio para nuevos mimos">
                       Todavía no hay citas para este día.
                     </EmptyState>

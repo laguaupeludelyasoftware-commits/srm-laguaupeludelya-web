@@ -14,7 +14,7 @@ import {
   Sparkle,
 } from 'lucide-react';
 import { Button } from '../../components/ui';
-import { usePublicBusiness } from '../../data/public-business';
+import { businessDays, usePublicBusiness } from '../../data/public-business';
 import { euros } from '../../domain/rules';
 
 /** Presentación pública con el contacto y catálogo publicados por el negocio. */
@@ -267,6 +267,32 @@ export function LandingPage() {
               {contact.address}
             </p>
           )}
+          <div className="published-hours">
+            <h3>Horario de atención</h3>
+            {business.isPending && <p role="status">Cargando el horario…</p>}
+            {business.isError && <p>No se pudo consultar el horario.</p>}
+            {business.isSuccess &&
+              (!business.data.hours?.length ? (
+                <p>Horario pendiente de publicar.</p>
+              ) : (
+                <dl>
+                  {businessDays.map((label, index) => {
+                    const intervals =
+                      business.data.hours?.filter((interval) => interval.day === index + 1) ?? [];
+                    return (
+                      <div key={label}>
+                        <dt>{label}</dt>
+                        <dd>
+                          {intervals.length
+                            ? intervals.map(({ start, end }) => `${start}–${end}`).join(' y ')
+                            : 'Cerrado'}
+                        </dd>
+                      </div>
+                    );
+                  })}
+                </dl>
+              ))}
+          </div>
         </div>
         <div className="contact-card">
           <PawPrint size={32} strokeWidth={1.3} />

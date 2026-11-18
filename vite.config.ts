@@ -10,6 +10,7 @@ const proxy = {
   '/api/auth/client': backend,
   '/api/management/session': backend,
   '/api/management/contact': backend,
+  '/api/management/hours': backend,
   '/api/management/password': backend,
   '/api/management/services': backend,
   '/api/management/clients': backend,
