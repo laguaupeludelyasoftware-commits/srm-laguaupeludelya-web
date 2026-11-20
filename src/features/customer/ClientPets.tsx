@@ -1,12 +1,21 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { Pencil, Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button, EmptyState, Modal, Notice } from '../../components/ui';
 import { PetFields, readPetFields, type PetDetails } from './PetForm';
 
 type ClientPet = PetDetails & { id: string };
 /** Lista y modifica las mascotas guardadas en la cuenta de cliente. */
-export function ClientPets({ token, clientId }: { token: string; clientId?: string }) {
+export function ClientPets({
+  token,
+  clientId,
+  selectedPetId,
+}: {
+  token: string;
+  clientId?: string;
+  selectedPetId?: string;
+}) {
   const queryClient = useQueryClient();
   const petsUrl = clientId
     ? `/api/management/clients/${encodeURIComponent(clientId)}/pets`
@@ -80,9 +89,11 @@ export function ClientPets({ token, clientId }: { token: string; clientId?: stri
     <section className="customer-page">
       <div className="section-bar">
         <h2>{clientId ? 'Mascotas' : 'Mis mascotas'}</h2>
-        <Button type="button" onClick={() => open('new')} disabled={!pets.isSuccess}>
-          <Plus size={17} /> Añadir mascota
-        </Button>
+        {!selectedPetId && (
+          <Button type="button" onClick={() => open('new')} disabled={!pets.isSuccess}>
+            <Plus size={17} /> Añadir mascota
+          </Button>
+        )}
       </div>
       {message && <Notice>{message}</Notice>}
       {pets.isPending && <p role="status">Cargando tus mascotas…</p>}
@@ -100,19 +111,29 @@ export function ClientPets({ token, clientId }: { token: string; clientId?: stri
         </EmptyState>
       )}
       <div className="catalog-grid">
-        {pets.data?.map((pet) => (
-          <article key={pet.id} className="panel catalog-card">
-            <h3>{pet.name}</h3>
-            <p>
-              {pet.species} · {pet.weight.toLocaleString('es-ES')} kg · Pelaje: {pet.coat}
-            </p>
-            {pet.breed && <p>Raza: {pet.breed}</p>}
-            {pet.notes && <p>{pet.notes}</p>}
-            <Button type="button" variant="outline" onClick={() => open(pet)}>
-              <Pencil size={15} /> Editar a {pet.name}
-            </Button>
-          </article>
-        ))}
+        {pets.data
+          ?.filter((pet) => !selectedPetId || pet.id === selectedPetId)
+          .map((pet) => (
+            <article key={pet.id} className="panel catalog-card">
+              <h3>{pet.name}</h3>
+              <p>
+                {pet.species} · {pet.weight.toLocaleString('es-ES')} kg · Pelaje: {pet.coat}
+              </p>
+              {pet.breed && <p>Raza: {pet.breed}</p>}
+              {pet.notes && <p>{pet.notes}</p>}
+              {clientId && !selectedPetId && (
+                <Link
+                  className="inline-link"
+                  to={`?cliente=${encodeURIComponent(clientId)}&mascota=${encodeURIComponent(pet.id)}`}
+                >
+                  Ver ficha de {pet.name}
+                </Link>
+              )}
+              <Button type="button" variant="outline" onClick={() => open(pet)}>
+                <Pencil size={15} /> Editar a {pet.name}
+              </Button>
+            </article>
+          ))}
       </div>
       <Modal
         title={current ? `Editar a ${current.name}` : 'Añadir mascota'}

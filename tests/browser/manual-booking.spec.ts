@@ -6,8 +6,32 @@ test('guarda una cita con un hueco de la API y la recupera al recargar', async (
   await page.route('**/api/management/clients', (route) =>
     route.fulfill({ json: [{ id: 'client', name: 'Ana', email: 'ana@example.test' }] }),
   );
+  await page.route('**/api/management/clients/client', (route) =>
+    route.fulfill({ json: { name: 'Ana', phone: '+34 600 123 456', notes: 'Nota privada' } }),
+  );
   await page.route('**/api/management/clients/client/pets', (route) =>
-    route.fulfill({ json: [{ id: 'pet', name: 'Milo', species: 'Perro' }] }),
+    route.fulfill({
+      json: [{ id: 'pet', name: 'Milo', species: 'Perro', weight: 10, coat: 'Corto' }],
+    }),
+  );
+  let ageMonths = 24;
+  await page.route('**/api/management/clients/client/pets/pet/details', (route) => {
+    if (route.request().method() === 'PUT') ageMonths = route.request().postDataJSON().ageMonths;
+    return route.fulfill({ json: { ageMonths, healthNotes: 'Piel sensible' } });
+  });
+  await page.route('**/api/management/clients/client/pets/pet/history', (route) =>
+    route.fulfill({
+      json: [
+        {
+          id: 'past',
+          startsAt: '2026-06-12T10:00:00',
+          serviceName: 'Baño anterior',
+          status: 'ATTENDED',
+          duration: 45,
+          price: 25,
+        },
+      ],
+    }),
   );
   await page.route('**/api/public/business', (route) =>
     route.fulfill({
@@ -47,6 +71,11 @@ test('guarda una cita con un hueco de la API y la recupera al recargar', async (
               serviceName: 'Baño',
               petName: 'Milo',
               clientName: 'Ana',
+              clientId: 'client',
+              petId: 'pet',
+              clientPhone: '600 123 456',
+              status: 'CONFIRMED',
+              canRecordAttendance: false,
             },
           ]
         : [],
@@ -65,5 +94,27 @@ test('guarda una cita con un hueco de la API y la recupera al recargar', async (
   await expect(appointment).toBeVisible();
   await page.reload();
   await appointment.click();
-  await expect(page.getByRole('dialog').getByText('Ana')).toBeVisible();
+  await expect(page.getByRole('dialog').getByRole('link', { name: 'Ana' })).toHaveAttribute(
+    'href',
+    '/gestion/clientes?cliente=client',
+  );
+  await page.getByRole('button', { name: 'Preparar recordatorio' }).click();
+  const reminder = await page
+    .getByRole('link', { name: 'Revisar y enviar en WhatsApp' })
+    .getAttribute('href');
+  expect(reminder).toContain('https://wa.me/34600123456?text=');
+  expect(decodeURIComponent(reminder ?? '')).toContain('la cita de Milo para Baño');
+  expect(decodeURIComponent(reminder ?? '')).toContain('10:00 (hora de Madrid)');
+  await page.getByRole('dialog').getByRole('link', { name: 'Ficha de Milo' }).click();
+  await expect(page.getByText('Baño anterior')).toBeVisible();
+  await page.getByLabel('Edad aproximada (meses)').fill('36');
+  await page.getByRole('button', { name: 'Guardar ficha' }).click();
+  await expect(page.getByText('Ficha guardada.')).toBeVisible();
+  await page.reload();
+  await expect(page.getByLabel('Edad aproximada (meses)')).toHaveValue('36');
+  await page.getByRole('link', { name: 'Volver a la ficha de Ana' }).click();
+  await expect(page.getByRole('link', { name: 'Abrir WhatsApp' })).toHaveAttribute(
+    'href',
+    'https://wa.me/34600123456',
+  );
 });

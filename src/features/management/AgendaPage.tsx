@@ -17,6 +17,7 @@ import { usePublicBusiness } from '../../data/public-business';
 import { addDays, dateKey, euros, localDate, statusLabels } from '../../domain/rules';
 import type { Appointment } from '../../domain/models';
 import { AppointmentDialog } from './AppointmentDialog';
+import { WhatsAppReminder } from './WhatsAppActions';
 import { appointmentsUrl, ManualBooking, ownerRequest } from './ManualBooking';
 
 type AgendaAppointment = Pick<
@@ -26,6 +27,9 @@ type AgendaAppointment = Pick<
 type StoredAppointment = Omit<AgendaAppointment, 'status'> & {
   status: 'CONFIRMED' | 'CANCELLED_ON_TIME' | 'CANCELLED_LATE' | 'ATTENDED' | 'ABSENT' | 'REJECTED';
   canRecordAttendance: boolean;
+  clientId: string;
+  petId: string;
+  clientPhone?: string;
 };
 
 const storedStatuses: Record<StoredAppointment['status'], Appointment['status']> = {
@@ -501,7 +505,26 @@ export function AgendaPage({ demo = false }: { demo?: boolean }) {
             appointmentTrigger.current?.focus({ preventScroll: true });
           }}
         >
-          <p>{storedAppointment.clientName}</p>
+          {storedAppointment.clientId ? (
+            <>
+              <p>
+                <Link
+                  to={`/gestion/clientes?cliente=${encodeURIComponent(storedAppointment.clientId)}`}
+                >
+                  {storedAppointment.clientName}
+                </Link>
+              </p>
+              <p>
+                <Link
+                  to={`/gestion/clientes?cliente=${encodeURIComponent(storedAppointment.clientId)}&mascota=${encodeURIComponent(storedAppointment.petId)}`}
+                >
+                  Ficha de {storedAppointment.petName}
+                </Link>
+              </p>
+            </>
+          ) : (
+            <p>{storedAppointment.clientName}</p>
+          )}
           <p>
             {storedAppointment.serviceName} · {storedAppointment.duration} min ·{' '}
             {euros(storedAppointment.price)}
@@ -511,6 +534,16 @@ export function AgendaPage({ demo = false }: { demo?: boolean }) {
               ? 'Cancelada fuera de plazo'
               : statusLabels[storedStatuses[storedAppointment.status] ?? 'confirmed']}
           </p>
+          {storedAppointment.status === 'CONFIRMED' &&
+            storedAppointment.canRecordAttendance === false && (
+              <WhatsAppReminder
+                key={storedAppointment.id}
+                phone={storedAppointment.clientPhone}
+                petName={storedAppointment.petName}
+                serviceName={storedAppointment.serviceName}
+                startsAt={storedAppointment.startsAt}
+              />
+            )}
           {storedAppointment.canRecordAttendance && (
             <div className="form-stack">
               <Button

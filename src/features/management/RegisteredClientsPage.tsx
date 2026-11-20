@@ -5,6 +5,7 @@ import { PageHeading } from '../../components/layout';
 import { Button, EmptyState, Field, Notice } from '../../components/ui';
 import { ClientPets } from '../customer/ClientPets';
 import { ownerToken } from './OwnerAccess';
+import { ManagementClientProfile, ManagementPetProfile } from './ManagementProfile';
 
 interface RegisteredClient {
   id: string;
@@ -19,6 +20,7 @@ export function RegisteredClientsPage() {
   const [search, setSearch] = useState('');
   const [params] = useSearchParams();
   const selectedId = params.get('cliente');
+  const petId = params.get('mascota');
   const clients = useQuery({
     queryKey: ['registered-clients', token],
     gcTime: 0,
@@ -61,7 +63,29 @@ export function RegisteredClientsPage() {
           <Link className="inline-link" to="/gestion/clientes">
             Volver a clientes
           </Link>
-          <ClientPets key={selected.id} token={token} clientId={selected.id} />
+          {petId ? (
+            <>
+              <Link className="inline-link" to={`?cliente=${encodeURIComponent(selected.id)}`}>
+                Volver a la ficha de {selected.name}
+              </Link>
+              <ClientPets key={petId} token={token} clientId={selected.id} selectedPetId={petId} />
+              <ManagementPetProfile
+                key={petId}
+                path={`/api/management/clients/${encodeURIComponent(selected.id)}/pets/${encodeURIComponent(petId)}`}
+              />
+            </>
+          ) : (
+            <>
+              <ManagementClientProfile
+                key={selected.id}
+                path={`/api/management/clients/${encodeURIComponent(selected.id)}`}
+                onSaved={() => {
+                  void clients.refetch();
+                }}
+              />
+              <ClientPets key={selected.id} token={token} clientId={selected.id} />
+            </>
+          )}
         </>
       )}
       {clients.isSuccess && !selected && (

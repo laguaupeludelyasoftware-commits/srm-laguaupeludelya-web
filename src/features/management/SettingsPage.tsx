@@ -9,6 +9,7 @@ import { BusinessContactForm } from './BusinessContactForm';
 import { OwnerPasswordForm } from './OwnerPasswordForm';
 import { BusinessHoursForm } from './BusinessHoursForm';
 import { BookingPolicyForm } from './BookingPolicyForm';
+import { ReminderSettings } from './ReminderSettings';
 
 export function SettingsPage() {
   return (
@@ -21,6 +22,7 @@ export function SettingsPage() {
       <BusinessContactForm />
       <BusinessHoursForm />
       <BookingPolicyForm />
+      <ReminderSettings />
       <OwnerPasswordForm />
     </>
   );

@@ -4,6 +4,7 @@ import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react
 import { Button, Field, Notice } from '../../components/ui';
 import { ClientPets } from './ClientPets';
 import { OnlineBooking } from './OnlineBooking';
+import { ReminderPreference } from './ReminderPreference';
 
 const sessionKey = 'guaupelu-client-session';
 
@@ -182,6 +183,7 @@ export function ClientAccount() {
             </Button>
           </div>
           <ClientPets token={token} />
+          <ReminderPreference token={token} />
           <Button asChild>
             <Link to="/reservar">Reservar o consultar mis citas</Link>
           </Button>

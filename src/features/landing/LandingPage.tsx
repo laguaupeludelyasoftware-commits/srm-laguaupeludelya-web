@@ -17,10 +17,13 @@ import { Button } from '../../components/ui';
 import { businessDays, usePublicBusiness } from '../../data/public-business';
 import { euros } from '../../domain/rules';
 
+import { whatsappNumber } from '../../lib/whatsapp';
+
 /** Presentación pública con el contacto y catálogo publicados por el negocio. */
 export function LandingPage() {
   const business = usePublicBusiness();
   const contact = business.data?.contact;
+  const whatsapp = whatsappNumber(contact?.phone);
   const services = business.data?.services ?? [];
   const icons = [Bath, Scissors, Sparkles];
   return (
@@ -267,6 +270,13 @@ export function LandingPage() {
               {contact.address}
             </p>
           )}
+          {whatsapp && (
+            <Button asChild variant="outline">
+              <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noreferrer">
+                Preguntar por WhatsApp
+              </a>
+            </Button>
+          )}
           <div className="published-hours">
             <h3>Horario de atención</h3>
             {business.isPending && <p role="status">Cargando el horario…</p>}
@@ -303,7 +313,6 @@ export function LandingPage() {
               Consultar reservas <ArrowUpRight size={18} />
             </Link>
           </Button>
-          <small>Sin citas reales ni envío de mensajes.</small>
         </div>
       </section>
     </>
