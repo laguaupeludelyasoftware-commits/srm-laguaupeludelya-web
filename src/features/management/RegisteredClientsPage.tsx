@@ -10,11 +10,13 @@ import { ManagementClientProfile, ManagementPetProfile } from './ManagementProfi
 interface RegisteredClient {
   id: string;
   name: string;
-  email: string;
+  email: string | null;
   emailVerified: boolean;
+  phone?: string;
+  hasAccount?: boolean;
 }
 
-/** Directorio de las cuentas de cliente y sus fichas persistidas. */
+/** Directorio de clientes con cuenta web o ficha presencial. */
 export function RegisteredClientsPage() {
   const token = ownerToken();
   const [search, setSearch] = useState('');
@@ -37,16 +39,20 @@ export function RegisteredClientsPage() {
   const selected = clients.data?.find((client) => client.id === selectedId);
   const filter = search.trim().toLocaleLowerCase('es');
   const matching = clients.data?.filter((client) =>
-    `${client.name} ${client.email}`.toLocaleLowerCase('es').includes(filter),
+    `${client.name} ${client.email ?? ''} ${client.phone ?? ''}`
+      .toLocaleLowerCase('es')
+      .includes(filter),
   );
 
   return (
     <>
       <PageHeading
         eyebrow="CLIENTES Y MASCOTAS"
-        title={selected?.name ?? 'Clientes registrados'}
+        title={selected?.name ?? 'Clientes'}
         description={
-          selected?.email ?? 'Consulta las cuentas registradas en la web y sus mascotas.'
+          selected
+            ? (selected.email ?? 'Ficha presencial sin cuenta web.')
+            : 'Consulta las fichas de clientes y sus mascotas.'
         }
       />
       {clients.isPending && <p role="status">Cargando clientes…</p>}
@@ -90,7 +96,7 @@ export function RegisteredClientsPage() {
       )}
       {clients.isSuccess && !selected && (
         <>
-          <Field label="Buscar por nombre o correo" htmlFor="registered-client-search">
+          <Field label="Buscar por nombre, teléfono o correo" htmlFor="registered-client-search">
             <input
               id="registered-client-search"
               type="search"
@@ -100,20 +106,25 @@ export function RegisteredClientsPage() {
           </Field>
           {matching?.length === 0 && (
             <EmptyState
-              title={filter ? 'No hay coincidencias' : 'Todavía no hay clientes registrados'}
+              title={filter ? 'No hay coincidencias' : 'Todavía no hay fichas de clientes'}
             >
               {filter
-                ? 'Prueba con otro nombre o correo.'
-                : 'Las cuentas aparecerán aquí cuando se registren.'}
+                ? 'Prueba con otro nombre, teléfono o correo.'
+                : 'Las fichas aparecerán aquí cuando el cliente se registre o lo añadas desde Nueva cita.'}
             </EmptyState>
           )}
           <div className="catalog-grid">
             {matching?.map((client) => (
               <article className="panel catalog-card" key={client.id}>
                 <h2>{client.name}</h2>
-                <p>{client.email}</p>
+                {client.email && <p>{client.email}</p>}
+                {client.phone && <p>{client.phone}</p>}
                 <p>
-                  {client.emailVerified ? 'Correo verificado' : 'Correo pendiente de verificar'}
+                  {client.hasAccount === false
+                    ? 'Sin cuenta web'
+                    : client.emailVerified
+                      ? 'Correo verificado'
+                      : 'Correo pendiente de verificar'}
                 </p>
                 <Button asChild variant="outline">
                   <Link to={`?cliente=${encodeURIComponent(client.id)}`}>

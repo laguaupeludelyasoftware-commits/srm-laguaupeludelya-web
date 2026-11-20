@@ -10,6 +10,22 @@ export function ownerToken() {
   return sessionStorage.getItem(sessionKey);
 }
 
+export async function ownerRequest(path: string, options: RequestInit = {}) {
+  const headers = new Headers(options.headers);
+  headers.set('Authorization', `Bearer ${ownerToken()}`);
+  const response = await fetch(path, { ...options, headers });
+  if (!response.ok) {
+    const detail = await response.json().catch(() => null);
+    throw new Error(
+      detail?.message ||
+        (response.status === 409
+          ? 'El hueco ya no está disponible. Selecciona otro horario.'
+          : 'No se pudo completar la operación.'),
+    );
+  }
+  return response;
+}
+
 /** El backend comprueba tanto la vigencia del token como el rol actual de la cuenta. */
 export async function checkOwnerSession(token: string, signal?: AbortSignal) {
   const response = await fetch('/api/management/session', {

@@ -18,6 +18,8 @@ import { addDays, bookingPrice, dateKey, localDate, statusLabels } from '../../d
 import type { Appointment } from '../../domain/models';
 import { AppointmentDialog } from './AppointmentDialog';
 import { WhatsAppReminder } from './WhatsAppActions';
+import { RescheduleAppointment } from './RescheduleAppointment';
+import { TreatmentForm, TreatmentSummary, type Treatment } from './TreatmentForm';
 import { appointmentsUrl, ManualBooking, ownerRequest } from './ManualBooking';
 
 type AgendaAppointment = Pick<
@@ -33,6 +35,7 @@ type StoredAppointment = Omit<AgendaAppointment, 'status'> & {
   extraNames?: string[];
   variantName?: string | null;
   priceMax?: number | null;
+  treatment?: Treatment | null;
 };
 
 const storedStatuses: Record<StoredAppointment['status'], Appointment['status']> = {
@@ -94,10 +97,12 @@ export function AgendaPage({ demo = false }: { demo?: boolean }) {
   const [attendancePending, setAttendancePending] = useState(false);
   const [attendanceError, setAttendanceError] = useState('');
   const [rejecting, setRejecting] = useState(false);
+  const [editingTreatment, setEditingTreatment] = useState(false);
   const [day, setDay] = useState(today);
   const [view, setView] = useState<'day' | 'week' | 'month'>('week');
   const timedView = view !== 'month';
   const [selected, setSelected] = useState<string | null>(null);
+  const [rescheduleMessage, setRescheduleMessage] = useState('');
   const appointmentTrigger = useRef<HTMLButtonElement | null>(null);
   const reviewCount = state.clients.filter(
     (c) => !c.validated && (c.reviewReason || c.cancellations >= 2),
@@ -175,19 +180,24 @@ export function AgendaPage({ demo = false }: { demo?: boolean }) {
   const storedAppointment = agenda.data?.find((a) => a.id === selected);
   async function updateAppointment(
     id: string,
-    action: 'attendance' | 'reject',
-    payload: { attended: boolean; validate: boolean } | { reason: string },
+    action: 'attendance' | 'reject' | 'treatment',
+    payload:
+      | { attended: boolean; validate: boolean; treatment?: Treatment }
+      | { reason: string }
+      | Treatment,
   ) {
     setAttendancePending(true);
     setAttendanceError('');
     try {
       await ownerRequest(`${appointmentsUrl}/${id}/${action}`, {
-        method: 'POST',
+        method: action === 'treatment' ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
       await queryClient.invalidateQueries({ queryKey: ['owner-agenda'] });
       await queryClient.invalidateQueries({ queryKey: ['online-booking-visits'] });
+      await queryClient.invalidateQueries({ queryKey: ['management-pet-history'] });
+      setEditingTreatment(false);
       setRejecting(false);
     } catch {
       setAttendanceError(
@@ -291,6 +301,7 @@ export function AgendaPage({ demo = false }: { demo?: boolean }) {
           )
         }
       />
+      {rescheduleMessage && <Notice>{rescheduleMessage}</Notice>}
       {!demo && agenda.isPending && <p role="status">Cargando citas…</p>}
       {!demo && agenda.isError && <Notice error>No se pudo cargar la agenda.</Notice>}
       <div className="stats-grid">
@@ -500,6 +511,7 @@ export function AgendaPage({ demo = false }: { demo?: boolean }) {
             if (!open && !attendancePending) {
               setAttendanceError('');
               setRejecting(false);
+              setEditingTreatment(false);
               setSelected(null);
             }
           }}
@@ -543,38 +555,69 @@ export function AgendaPage({ demo = false }: { demo?: boolean }) {
           </p>
           {storedAppointment.status === 'CONFIRMED' &&
             storedAppointment.canRecordAttendance === false && (
-              <WhatsAppReminder
+              <>
+                <RescheduleAppointment
+                  key={`${storedAppointment.id}-${storedAppointment.startsAt}`}
+                  id={storedAppointment.id}
+                  startsAt={storedAppointment.startsAt}
+                  today={today}
+                  onSaved={(date) => {
+                    setSelected(null);
+                    setDay(date);
+                    setRescheduleMessage('Cita reprogramada.');
+                    void Promise.all([
+                      queryClient.invalidateQueries({ queryKey: ['owner-agenda'] }),
+                      queryClient.invalidateQueries({ queryKey: ['owner-availability'] }),
+                      queryClient.invalidateQueries({ queryKey: ['online-booking-slots'] }),
+                      queryClient.invalidateQueries({ queryKey: ['online-booking-visits'] }),
+                    ]);
+                  }}
+                />
+                <WhatsAppReminder
+                  key={storedAppointment.id}
+                  phone={storedAppointment.clientPhone}
+                  petName={storedAppointment.petName}
+                  serviceName={storedAppointment.serviceName}
+                  startsAt={storedAppointment.startsAt}
+                />
+              </>
+            )}
+          {storedAppointment.status === 'ATTENDED' && storedAppointment.treatment && (
+            <TreatmentSummary treatment={storedAppointment.treatment} />
+          )}
+          {editingTreatment &&
+            (storedAppointment.status === 'ATTENDED' || storedAppointment.canRecordAttendance) && (
+              <TreatmentForm
                 key={storedAppointment.id}
-                phone={storedAppointment.clientPhone}
-                petName={storedAppointment.petName}
-                serviceName={storedAppointment.serviceName}
-                startsAt={storedAppointment.startsAt}
+                initial={storedAppointment.treatment}
+                closingVisit={storedAppointment.status !== 'ATTENDED'}
+                saving={attendancePending}
+                onCancel={() => {
+                  setEditingTreatment(false);
+                  setAttendanceError('');
+                }}
+                onSave={(treatment, validate) => {
+                  if (storedAppointment.status === 'ATTENDED') {
+                    void updateAppointment(storedAppointment.id, 'treatment', treatment);
+                  } else {
+                    void updateAppointment(storedAppointment.id, 'attendance', {
+                      attended: true,
+                      validate,
+                      treatment,
+                    });
+                  }
+                }}
               />
             )}
-          {storedAppointment.canRecordAttendance && (
+          {storedAppointment.status === 'ATTENDED' && !editingTreatment && (
+            <Button type="button" variant="outline" onClick={() => setEditingTreatment(true)}>
+              {storedAppointment.treatment ? 'Editar tratamiento' : 'Añadir tratamiento'}
+            </Button>
+          )}
+          {storedAppointment.canRecordAttendance && !editingTreatment && (
             <div className="form-stack">
-              <Button
-                disabled={attendancePending}
-                onClick={() =>
-                  void updateAppointment(storedAppointment.id, 'attendance', {
-                    attended: true,
-                    validate: true,
-                  })
-                }
-              >
-                Registrar asistencia y validar cliente
-              </Button>
-              <Button
-                variant="outline"
-                disabled={attendancePending}
-                onClick={() =>
-                  void updateAppointment(storedAppointment.id, 'attendance', {
-                    attended: true,
-                    validate: false,
-                  })
-                }
-              >
-                Registrar solo asistencia
+              <Button disabled={attendancePending} onClick={() => setEditingTreatment(true)}>
+                Registrar asistencia
               </Button>
               <Button
                 variant="outline"

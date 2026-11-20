@@ -1,28 +1,14 @@
 import { useState, type FormEvent } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, Field, Modal, Notice } from '../../components/ui';
 import { usePublicBusiness } from '../../data/public-business';
-import type { Species } from '../../domain/models';
-import { ownerToken } from './OwnerAccess';
+import { ownerRequest, ownerToken } from './OwnerAccess';
 import { BookingExtras, bookingParams, useBookingQuote } from '../booking/BookingExtras';
+import { InlineBookingProfile, type BookingClient, type BookingPet } from './InlineBookingProfile';
 
 export const appointmentsUrl = '/api/management/appointments';
 
-export async function ownerRequest(path: string, options: RequestInit = {}) {
-  const headers = new Headers(options.headers);
-  headers.set('Authorization', `Bearer ${ownerToken()}`);
-  const response = await fetch(path, { ...options, headers });
-  if (!response.ok) {
-    const detail = await response.json().catch(() => null);
-    throw new Error(
-      detail?.message ||
-        (response.status === 409
-          ? 'El hueco ya no está disponible. Selecciona otro horario.'
-          : 'No se pudo completar la operación.'),
-    );
-  }
-  return response;
-}
+export { ownerRequest };
 
 export function ManualBooking({
   day,
@@ -41,22 +27,54 @@ export function ManualBooking({
   const [startsAt, setStart] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [adding, setAdding] = useState<'client' | 'pet'>();
+  const [profileMessage, setProfileMessage] = useState('');
+  const queryClient = useQueryClient();
   const business = usePublicBusiness();
   const clients = useQuery({
     queryKey: ['booking-clients'],
-    queryFn: async ({ signal }): Promise<{ id: string; name: string; email: string }[]> =>
+    queryFn: async ({ signal }): Promise<BookingClient[]> =>
       (await ownerRequest('/api/management/clients', { signal })).json(),
   });
   const pets = useQuery({
     queryKey: ['booking-pets', clientId],
     enabled: !!clientId,
-    queryFn: async ({ signal }): Promise<{ id: string; name: string; species: Species }[]> =>
+    queryFn: async ({ signal }): Promise<BookingPet[]> =>
       (
         await ownerRequest(`/api/management/clients/${encodeURIComponent(clientId)}/pets`, {
           signal,
         })
       ).json(),
   });
+
+  function selectPet(id: string) {
+    setPet(id);
+    setService('');
+    setExtras([]);
+    setStart('');
+  }
+
+  function profileSaved(pet: BookingPet, client?: BookingClient) {
+    const ownerId = client?.id ?? clientId;
+    if (client) {
+      queryClient.setQueryData<BookingClient[]>(['booking-clients'], (existing) => [
+        ...(existing ?? []).filter((row) => row.id !== client.id),
+        client,
+      ]);
+      setClient(client.id);
+    }
+    queryClient.setQueryData<BookingPet[]>(['booking-pets', ownerId], (existing) => [
+      ...(existing ?? []).filter((row) => row.id !== pet.id),
+      pet,
+    ]);
+    selectPet(pet.id);
+    setAdding(undefined);
+    setProfileMessage(client ? 'Ficha y mascota guardadas.' : 'Mascota guardada.');
+    void queryClient.invalidateQueries({ queryKey: ['booking-clients'] });
+    void queryClient.invalidateQueries({ queryKey: ['registered-clients'] });
+    void queryClient.invalidateQueries({ queryKey: ['booking-pets', ownerId] });
+    void queryClient.invalidateQueries({ queryKey: ['client-pets'] });
+  }
   const pet = pets.data?.find((entry) => entry.id === petId);
   const services = business.data?.services.filter(
     (service) => pet && service.species.includes(pet.species),
@@ -117,131 +135,160 @@ export function ManualBooking({
       title="Nueva cita"
       description="Selecciona un hueco en el horario del negocio."
     >
-      <form onSubmit={save}>
-        <fieldset disabled={saving} className="form-stack">
-          <Field label="Cliente" htmlFor="booking-client">
-            <select
-              id="booking-client"
-              required
-              value={clientId}
-              onChange={(e) => {
-                setClient(e.target.value);
-                setPet('');
-                setService('');
-                setExtras([]);
-                setStart('');
+      {adding ? (
+        <InlineBookingProfile
+          clientId={adding === 'pet' ? clientId : undefined}
+          saving={saving}
+          setSaving={setSaving}
+          onBack={() => setAdding(undefined)}
+          onSaved={profileSaved}
+        />
+      ) : (
+        <form onSubmit={save}>
+          <fieldset disabled={saving} className="form-stack">
+            {profileMessage && <Notice>{profileMessage}</Notice>}
+            <Field label="Cliente" htmlFor="booking-client">
+              <select
+                id="booking-client"
+                required
+                value={clientId}
+                onChange={(e) => {
+                  setClient(e.target.value);
+                  selectPet('');
+                }}
+              >
+                <option value="">Selecciona un cliente</option>
+                {clients.data?.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name}
+                    {client.phone ? ` · ${client.phone}` : client.email ? ` · ${client.email}` : ''}
+                    {client.hasAccount === false ? ' · Sin cuenta web' : ''}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setProfileMessage('');
+                setAdding('client');
               }}
             >
-              <option value="">Selecciona un cliente</option>
-              {clients.data?.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.name} · {client.email}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Mascota" htmlFor="booking-pet">
-            <select
-              id="booking-pet"
-              required
-              value={petId}
-              disabled={!clientId}
-              onChange={(e) => {
-                setPet(e.target.value);
-                setService('');
-                setExtras([]);
-                setStart('');
-              }}
+              Nueva ficha presencial
+            </Button>
+            <Field label="Mascota" htmlFor="booking-pet">
+              <select
+                id="booking-pet"
+                required
+                value={petId}
+                disabled={!clientId}
+                onChange={(e) => {
+                  selectPet(e.target.value);
+                }}
+              >
+                <option value="">Selecciona una mascota</option>
+                {pets.data?.map((entry) => (
+                  <option key={entry.id} value={entry.id}>
+                    {entry.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            {clientId && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setProfileMessage('');
+                  setAdding('pet');
+                }}
+              >
+                Añadir mascota a este cliente
+              </Button>
+            )}
+            <Field label="Servicio" htmlFor="booking-service">
+              <select
+                id="booking-service"
+                required
+                value={serviceId}
+                disabled={!petId}
+                onChange={(e) => {
+                  setService(e.target.value);
+                  setExtras([]);
+                  setStart('');
+                }}
+              >
+                <option value="">Selecciona un servicio</option>
+                {services?.map((service) => (
+                  <option key={service.id} value={service.id}>
+                    {service.name} · {service.duration} min
+                  </option>
+                ))}
+              </select>
+            </Field>
+            {canQuote && (
+              <BookingExtras
+                quote={quote}
+                selected={extraIds}
+                onChange={(ids) => {
+                  setExtras(ids);
+                  setStart('');
+                }}
+              />
+            )}
+            <Field label="Fecha" htmlFor="booking-date">
+              <input
+                id="booking-date"
+                required
+                type="date"
+                value={date}
+                onChange={(e) => {
+                  setDate(e.target.value);
+                  setStart('');
+                }}
+              />
+            </Field>
+            <Field label="Hora de Madrid" htmlFor="booking-time">
+              <select
+                id="booking-time"
+                required
+                disabled={!slots.data?.length || slots.isFetching}
+                value={startsAt}
+                onChange={(e) => setStart(e.target.value)}
+              >
+                <option value="">Selecciona un hueco</option>
+                {slots.data?.map((slot) => (
+                  <option key={slot} value={slot}>
+                    {slot.slice(11, 16)}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            {(clients.isError || pets.isError || business.isError || slots.isError) && (
+              <Notice error>No se pudieron cargar los datos de la cita.</Notice>
+            )}
+            {clients.data?.length === 0 && (
+              <p>El directorio todavía no tiene fichas de clientes.</p>
+            )}
+            {clientId && pets.data?.length === 0 && (
+              <p>Añade la mascota para continuar con la cita.</p>
+            )}
+            {petId && services?.length === 0 && <p>No hay servicios activos para esta especie.</p>}
+            {canSearch && slots.isFetching && <p role="status">Buscando huecos…</p>}
+            {slots.data?.length === 0 && (
+              <p>No quedan huecos para este servicio en la fecha elegida.</p>
+            )}
+            {error && <Notice error>{error}</Notice>}
+            <Button
+              type="submit"
+              disabled={!startsAt || slots.isFetching || quote.isFetching || saving}
             >
-              <option value="">Selecciona una mascota</option>
-              {pets.data?.map((entry) => (
-                <option key={entry.id} value={entry.id}>
-                  {entry.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Servicio" htmlFor="booking-service">
-            <select
-              id="booking-service"
-              required
-              value={serviceId}
-              disabled={!petId}
-              onChange={(e) => {
-                setService(e.target.value);
-                setExtras([]);
-                setStart('');
-              }}
-            >
-              <option value="">Selecciona un servicio</option>
-              {services?.map((service) => (
-                <option key={service.id} value={service.id}>
-                  {service.name} · {service.duration} min
-                </option>
-              ))}
-            </select>
-          </Field>
-          {canQuote && (
-            <BookingExtras
-              quote={quote}
-              selected={extraIds}
-              onChange={(ids) => {
-                setExtras(ids);
-                setStart('');
-              }}
-            />
-          )}
-          <Field label="Fecha" htmlFor="booking-date">
-            <input
-              id="booking-date"
-              required
-              type="date"
-              value={date}
-              onChange={(e) => {
-                setDate(e.target.value);
-                setStart('');
-              }}
-            />
-          </Field>
-          <Field label="Hora de Madrid" htmlFor="booking-time">
-            <select
-              id="booking-time"
-              required
-              disabled={!slots.data?.length || slots.isFetching}
-              value={startsAt}
-              onChange={(e) => setStart(e.target.value)}
-            >
-              <option value="">Selecciona un hueco</option>
-              {slots.data?.map((slot) => (
-                <option key={slot} value={slot}>
-                  {slot.slice(11, 16)}
-                </option>
-              ))}
-            </select>
-          </Field>
-          {(clients.isError || pets.isError || business.isError || slots.isError) && (
-            <Notice error>No se pudieron cargar los datos de la cita.</Notice>
-          )}
-          {clients.data?.length === 0 && (
-            <p>El directorio todavía no tiene clientes registrados.</p>
-          )}
-          {clientId && pets.data?.length === 0 && (
-            <p>Añade una mascota desde la ficha del cliente.</p>
-          )}
-          {petId && services?.length === 0 && <p>No hay servicios activos para esta especie.</p>}
-          {canSearch && slots.isFetching && <p role="status">Buscando huecos…</p>}
-          {slots.data?.length === 0 && (
-            <p>No quedan huecos para este servicio en la fecha elegida.</p>
-          )}
-          {error && <Notice error>{error}</Notice>}
-          <Button
-            type="submit"
-            disabled={!startsAt || slots.isFetching || quote.isFetching || saving}
-          >
-            {saving ? 'Guardando…' : 'Guardar cita'}
-          </Button>
-        </fieldset>
-      </form>
+              {saving ? 'Guardando…' : 'Guardar cita'}
+            </Button>
+          </fieldset>
+        </form>
+      )}
     </Modal>
   );
 }

@@ -87,6 +87,7 @@ test('guarda una cita con un hueco de la API y la recupera al recargar', async (
     }),
   );
   let startsAt = '';
+  let rescheduleAttempts = 0;
   await page.route('**/api/management/appointments/availability?*', (route) => {
     const date = new URL(route.request().url()).searchParams.get('date');
     return route.fulfill({ json: [`${date}T10:00:00`] });
@@ -106,6 +107,20 @@ test('guarda una cita con un hueco de la API y la recupera al recargar', async (
   });
   await page.route('**/api/management/appointments**', (route) => {
     const request = route.request();
+    const pathname = new URL(request.url()).pathname;
+    if (pathname.endsWith('/reschedule/availability')) {
+      const date = new URL(request.url()).searchParams.get('date');
+      return route.fulfill({ json: [`${date}T11:00:00`] });
+    }
+    if (pathname.endsWith('/reschedule') && request.method() === 'PUT') {
+      expect(request.postDataJSON()).toEqual({
+        expectedStart: startsAt,
+        startsAt: `${startsAt.slice(0, 10)}T11:00:00`,
+      });
+      if (++rescheduleAttempts === 1) return route.fulfill({ status: 409 });
+      startsAt = request.postDataJSON().startsAt;
+      return route.fulfill({ status: 204 });
+    }
     if (/\/(availability|quote)$/.test(new URL(request.url()).pathname)) return route.fallback();
     if (request.method() === 'POST') {
       expect(request.headers().authorization).toBe('Bearer owner-test');
@@ -172,6 +187,16 @@ test('guarda una cita con un hueco de la API y la recupera al recargar', async (
   expect(reminder).toContain('https://wa.me/34600123456?text=');
   expect(decodeURIComponent(reminder ?? '')).toContain('la cita de Milo para Baño');
   expect(decodeURIComponent(reminder ?? '')).toContain('10:00 (hora de Madrid)');
+  await page.getByRole('button', { name: 'Cambiar fecha u hora' }).click();
+  await page.getByLabel('Nueva hora de Madrid').selectOption({ label: '11:00' });
+  await page.getByRole('button', { name: 'Confirmar cambio' }).click();
+  await expect(page.getByText(/No se pudo reprogramar/)).toBeVisible();
+  await expect(page.getByRole('dialog').getByText(/· 10:00$/)).toBeVisible();
+  await page.getByLabel('Nueva hora de Madrid').selectOption({ label: '11:00' });
+  await page.getByRole('button', { name: 'Confirmar cambio' }).click();
+  await expect(page.getByText('Cita reprogramada.')).toBeVisible();
+  await expect(appointment).toHaveCount(0);
+  await page.getByRole('button', { name: /Milo, 11:00, 60 min/ }).click();
   await page.getByRole('dialog').getByRole('link', { name: 'Ficha de Milo' }).click();
   await expect(page.getByText('Baño anterior')).toBeVisible();
   await page.getByLabel('Edad aproximada (meses)').fill('36');

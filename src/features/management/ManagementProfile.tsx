@@ -4,6 +4,7 @@ import { Button, Field, Notice } from '../../components/ui';
 import { bookingPrice, statusLabels } from '../../domain/rules';
 import { ownerRequest } from './ManualBooking';
 import { WhatsAppContact } from './WhatsAppActions';
+import { TreatmentSummary, type Treatment } from './TreatmentForm';
 
 function ProfileForm<T>({
   path,
@@ -110,6 +111,7 @@ export function ManagementClientProfile({ path, onSaved }: { path: string; onSav
 }
 
 type Visit = {
+  treatment?: Treatment | null;
   variantName?: string | null;
   priceMax?: number | null;
   id: string;
@@ -183,6 +185,12 @@ export function ManagementPetProfile({ path }: { path: string }) {
                   {bookingPrice(visit.price, visit.priceMax)}
                 </p>
                 {visit.variantName && <p>Variante: {visit.variantName}</p>}
+                {visit.status === 'ATTENDED' &&
+                  (visit.treatment ? (
+                    <TreatmentSummary treatment={visit.treatment} />
+                  ) : (
+                    <p>Sin tratamiento registrado.</p>
+                  ))}
               </li>
             ))}
           </ul>
