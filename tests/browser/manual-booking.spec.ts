@@ -1,5 +1,65 @@
 import { expect, test } from '@playwright/test';
 
+test('crea un extra de catálogo y lo asigna al crear un servicio', async ({ page }) => {
+  await page.addInitScript(() => sessionStorage.setItem('guaupelu-owner-session', 'owner-test'));
+  await page.route('**/api/management/session', (route) => route.fulfill({ status: 204 }));
+  const extra = { id: 'brush', name: 'Cepillado', price: 5, duration: 15, active: true };
+  let savedExtra = false;
+  await page.route('**/api/management/extras', (route) => {
+    if (route.request().method() === 'POST') {
+      expect(route.request().postDataJSON()).toEqual({
+        name: extra.name,
+        price: extra.price,
+        duration: extra.duration,
+        active: extra.active,
+      });
+      savedExtra = true;
+      return route.fulfill({ status: 201, json: extra });
+    }
+    return route.fulfill({ json: savedExtra ? [extra] : [] });
+  });
+  const service = {
+    name: 'Baño de prueba',
+    description: '',
+    price: 25,
+    duration: 45,
+    species: ['Perro'],
+    active: false,
+    extraIds: [extra.id],
+  };
+  let savedService = false;
+  await page.route('**/api/management/services', (route) => {
+    if (route.request().method() === 'POST') {
+      expect(route.request().postDataJSON()).toEqual(service);
+      savedService = true;
+      return route.fulfill({ status: 201, json: { id: 'bath', ...service } });
+    }
+    return route.fulfill({ json: savedService ? [{ id: 'bath', ...service }] : [] });
+  });
+
+  await page.goto('/gestion/servicios');
+  await page.getByRole('button', { name: 'Gestionar extras' }).click();
+  await page.getByRole('button', { name: 'Nuevo extra' }).click();
+  await page.getByLabel('Nombre del extra').fill(extra.name);
+  await page.getByLabel('Precio adicional').fill(String(extra.price));
+  await page.getByLabel('Minutos adicionales').fill(String(extra.duration));
+  await page.getByLabel('Publicar extra').check();
+  await page.getByRole('button', { name: 'Guardar extra' }).click();
+  await expect(page.getByText(extra.name, { exact: true })).toBeVisible();
+  await page.keyboard.press('Escape');
+
+  await page.getByRole('button', { name: 'Nuevo servicio' }).click();
+  await page.getByLabel('Nombre del servicio').fill(service.name);
+  await page.getByLabel('Precio base').fill(String(service.price));
+  await page.getByLabel('Duración (minutos)').fill(String(service.duration));
+  await page.getByRole('checkbox', { name: /Cepillado/ }).check();
+  await page.getByRole('button', { name: 'Guardar servicio' }).click();
+  await expect(page.getByText('Servicio guardado.')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Editar servicio' }).click();
+  await expect(page.getByRole('checkbox', { name: /Cepillado/ })).toBeChecked();
+});
+
 test('carga un ejemplo editable de variante y lo guarda desactivado', async ({ page }) => {
   await page.addInitScript(() => sessionStorage.setItem('guaupelu-owner-session', 'owner-test'));
   await page.route('**/api/management/session', (route) => route.fulfill({ status: 204 }));

@@ -1,24 +1,26 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { Button, Field, Modal, Notice } from '../../components/ui';
 import { euros } from '../../domain/rules';
 import type { Extra } from '../booking/BookingExtras';
-import { ownerRequest } from './ManualBooking';
+import { ownerRequest } from './OwnerAccess';
 
-export function CatalogExtras({
-  service,
-  onClose,
-}: {
-  service: { id: string; name: string };
-  onClose: () => void;
-}) {
-  const path = `/api/management/services/${encodeURIComponent(service.id)}/extras`;
-  const [editing, setEditing] = useState<Extra | 'new'>();
-  const current = typeof editing === 'object' ? editing : undefined;
-  const extras = useQuery({
-    queryKey: ['owner-service-extras', service.id],
+const path = '/api/management/extras';
+const extrasKey = ['owner-catalog-extras'];
+
+export function useCatalogExtras(enabled = true) {
+  return useQuery({
+    queryKey: extrasKey,
+    enabled,
     queryFn: async ({ signal }): Promise<Extra[]> => (await ownerRequest(path, { signal })).json(),
   });
+}
+
+export function CatalogExtras({ onClose }: { onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const [editing, setEditing] = useState<Extra | 'new'>();
+  const current = typeof editing === 'object' ? editing : undefined;
+  const extras = useCatalogExtras();
   const save = useMutation({
     mutationFn: async (data: FormData) => {
       await ownerRequest(current ? `${path}/${encodeURIComponent(current.id)}` : path, {
@@ -33,7 +35,11 @@ export function CatalogExtras({
       });
     },
     onSuccess: async () => {
-      await extras.refetch();
+      await Promise.all(
+        [extrasKey, ['booking-quote'], ['owner-availability'], ['online-booking-slots']].map(
+          (queryKey) => queryClient.invalidateQueries({ queryKey }),
+        ),
+      );
       setEditing(undefined);
     },
   });
@@ -46,15 +52,15 @@ export function CatalogExtras({
   return (
     <Modal
       open
-      title={`Extras de ${service.name}`}
-      description="Los extras publicados estarán disponibles al reservar este servicio."
+      title="Catálogo de extras"
+      description="Crea extras y asígnalos a los servicios que quieras ofrecerlos."
       onOpenChange={(open) => {
         if (!open && !save.isPending) onClose();
       }}
     >
       {extras.isPending && <p role="status">Cargando extras…</p>}
       {extras.isError && <Notice error>No se pudieron consultar los extras.</Notice>}
-      {extras.data?.length === 0 && <p>Este servicio aún no tiene extras.</p>}
+      {extras.data?.length === 0 && <p>Aún no hay extras en el catálogo.</p>}
       {!editing && (
         <div className="form-stack">
           {extras.data?.map((extra) => (

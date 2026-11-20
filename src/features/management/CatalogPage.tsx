@@ -7,18 +7,19 @@ import { Button, Field, Modal, Notice } from '../../components/ui';
 import type { Service, Species } from '../../domain/models';
 import { euros } from '../../domain/rules';
 import { ownerToken } from './OwnerAccess';
-import { CatalogExtras } from './CatalogExtras';
+import { CatalogExtras, useCatalogExtras } from './CatalogExtras';
 import { CatalogVariants } from './CatalogVariants';
 
 const catalogUrl = '/api/management/services';
 const catalogKey = ['owner-catalog'];
+type ManagedService = Service & { extraIds?: string[] };
 
 /** Catálogo de gestión que publica los servicios disponibles en la web. */
 export function CatalogPage() {
   const queryClient = useQueryClient();
   const catalog = useQuery({
     queryKey: catalogKey,
-    queryFn: async ({ signal }): Promise<Service[]> => {
+    queryFn: async ({ signal }): Promise<ManagedService[]> => {
       const response = await fetch(catalogUrl, {
         headers: { Authorization: `Bearer ${ownerToken()}` },
         signal,
@@ -27,16 +28,18 @@ export function CatalogPage() {
       return response.json();
     },
   });
-  const [editing, setEditing] = useState<Service | 'new' | null>(null);
-  const [extrasService, setExtrasService] = useState<Service | null>(null);
+  const [editing, setEditing] = useState<ManagedService | 'new' | null>(null);
+  const [managingExtras, setManagingExtras] = useState(false);
   const [variantService, setVariantService] = useState<Service | null>(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const current = editing && editing !== 'new' ? editing : null;
+  const extras = useCatalogExtras(!!editing);
   /** Guarda el servicio y actualiza las consultas del panel y de la web. */
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!extras.isSuccess) return;
     const data = new FormData(event.currentTarget);
     const name = String(data.get('name')).trim();
     const price = Number(data.get('price'));
@@ -46,13 +49,14 @@ export function CatalogPage() {
       setError('Añade un nombre, al menos una especie y una duración válida.');
       return;
     }
-    const service: Omit<Service, 'id'> = {
+    const service = {
       name,
       description: String(data.get('description')).trim(),
       price,
       duration,
       species,
       active: data.get('active') === 'on',
+      extraIds: data.getAll('extraIds').map(String),
     };
     setSaving(true);
     setError('');
@@ -78,6 +82,9 @@ export function CatalogPage() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: catalogKey }),
         queryClient.invalidateQueries({ queryKey: ['public-business'] }),
+        queryClient.invalidateQueries({ queryKey: ['booking-quote'] }),
+        queryClient.invalidateQueries({ queryKey: ['owner-availability'] }),
+        queryClient.invalidateQueries({ queryKey: ['online-booking-slots'] }),
       ]);
       setEditing(null);
       setMessage('Servicio guardado.');
@@ -94,14 +101,19 @@ export function CatalogPage() {
         title="Servicios con tu sello."
         description="Lo que ofreces y cómo lo cuentas, en un mismo lugar."
         action={
-          <Button
-            onClick={() => {
-              setError('');
-              setEditing('new');
-            }}
-          >
-            <Plus size={17} /> Nuevo servicio
-          </Button>
+          <div className="choice-row">
+            <Button variant="outline" onClick={() => setManagingExtras(true)}>
+              Gestionar extras
+            </Button>
+            <Button
+              onClick={() => {
+                setError('');
+                setEditing('new');
+              }}
+            >
+              <Plus size={17} /> Nuevo servicio
+            </Button>
+          </div>
         }
       />
       {message && <Notice>{message}</Notice>}
@@ -148,18 +160,13 @@ export function CatalogPage() {
             >
               <Pencil size={15} /> Editar servicio
             </Button>
-            <Button variant="outline" onClick={() => setExtrasService(s)}>
-              Gestionar extras
-            </Button>
             <Button variant="outline" onClick={() => setVariantService(s)}>
               Gestionar variantes
             </Button>
           </article>
         ))}
       </div>
-      {extrasService && (
-        <CatalogExtras service={extrasService} onClose={() => setExtrasService(null)} />
-      )}
+      {managingExtras && <CatalogExtras onClose={() => setManagingExtras(false)} />}
       {variantService && (
         <CatalogVariants service={variantService} onClose={() => setVariantService(null)} />
       )}
@@ -232,11 +239,36 @@ export function CatalogPage() {
               ))}
             </div>
           </fieldset>
+          <fieldset>
+            <legend>Extras del servicio</legend>
+            {extras.isPending && <p role="status">Cargando extras…</p>}
+            {extras.isError && (
+              <Notice error>
+                No se pudieron consultar los extras.{' '}
+                <Button type="button" variant="outline" onClick={() => void extras.refetch()}>
+                  Reintentar
+                </Button>
+              </Notice>
+            )}
+            {extras.data?.length === 0 && <p>Puedes crear extras desde «Gestionar extras».</p>}
+            {extras.data?.map((extra) => (
+              <label className="checkbox-line" key={extra.id}>
+                <input
+                  type="checkbox"
+                  name="extraIds"
+                  value={extra.id}
+                  defaultChecked={current?.extraIds?.includes(extra.id)}
+                />
+                {extra.name} · {euros(extra.price)} · +{extra.duration} min
+                {!extra.active && ' · Desactivado'}
+              </label>
+            ))}
+          </fieldset>
           <label className="checkbox-line">
             <input type="checkbox" name="active" defaultChecked={current?.active ?? false} />{' '}
             Publicar para nuevas reservas
           </label>
-          <Button type="submit" disabled={saving}>
+          <Button type="submit" disabled={saving || !extras.isSuccess}>
             {saving ? 'Guardando…' : 'Guardar servicio'}
           </Button>
         </form>
