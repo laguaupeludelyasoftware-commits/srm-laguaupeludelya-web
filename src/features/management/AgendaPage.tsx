@@ -14,7 +14,7 @@ import { PageHeading } from '../../components/layout';
 import { Button, Modal, Notice } from '../../components/ui';
 import { useDemo } from '../../data/demo-store';
 import { usePublicBusiness } from '../../data/public-business';
-import { addDays, dateKey, euros, localDate, statusLabels } from '../../domain/rules';
+import { addDays, bookingPrice, dateKey, localDate, statusLabels } from '../../domain/rules';
 import type { Appointment } from '../../domain/models';
 import { AppointmentDialog } from './AppointmentDialog';
 import { WhatsAppReminder } from './WhatsAppActions';
@@ -30,6 +30,9 @@ type StoredAppointment = Omit<AgendaAppointment, 'status'> & {
   clientId: string;
   petId: string;
   clientPhone?: string;
+  extraNames?: string[];
+  variantName?: string | null;
+  priceMax?: number | null;
 };
 
 const storedStatuses: Record<StoredAppointment['status'], Appointment['status']> = {
@@ -527,8 +530,12 @@ export function AgendaPage({ demo = false }: { demo?: boolean }) {
           )}
           <p>
             {storedAppointment.serviceName} · {storedAppointment.duration} min ·{' '}
-            {euros(storedAppointment.price)}
+            {bookingPrice(storedAppointment.price, storedAppointment.priceMax)}
           </p>
+          {storedAppointment.variantName && <p>Variante: {storedAppointment.variantName}</p>}
+          {!!storedAppointment.extraNames?.length && (
+            <p>Extras: {storedAppointment.extraNames.join(', ')}</p>
+          )}
           <p>
             {storedAppointment.status === 'CANCELLED_LATE'
               ? 'Cancelada fuera de plazo'

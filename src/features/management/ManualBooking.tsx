@@ -4,6 +4,7 @@ import { Button, Field, Modal, Notice } from '../../components/ui';
 import { usePublicBusiness } from '../../data/public-business';
 import type { Species } from '../../domain/models';
 import { ownerToken } from './OwnerAccess';
+import { BookingExtras, bookingParams, useBookingQuote } from '../booking/BookingExtras';
 
 export const appointmentsUrl = '/api/management/appointments';
 
@@ -35,6 +36,7 @@ export function ManualBooking({
   const [clientId, setClient] = useState('');
   const [petId, setPet] = useState('');
   const [serviceId, setService] = useState('');
+  const [extraIds, setExtras] = useState<string[]>([]);
   const [date, setDate] = useState(day);
   const [startsAt, setStart] = useState('');
   const [error, setError] = useState('');
@@ -59,32 +61,48 @@ export function ManualBooking({
   const services = business.data?.services.filter(
     (service) => pet && service.species.includes(pet.species),
   );
-  const canSearch = !!(clientId && petId && serviceId && date);
+  const canQuote = !!(clientId && petId && services?.some((service) => service.id === serviceId));
+  const quote = useBookingQuote(
+    appointmentsUrl,
+    ownerToken(),
+    bookingParams({ clientId, petId, serviceId }, extraIds),
+    canQuote,
+  );
+  const canSearch = !!(canQuote && date && quote.isSuccess && !quote.isPlaceholderData);
   const slots = useQuery({
-    queryKey: ['owner-availability', clientId, petId, serviceId, date],
+    queryKey: ['owner-availability', clientId, petId, serviceId, date, extraIds],
     enabled: canSearch,
     queryFn: async ({ signal }): Promise<string[]> => {
-      const params = new URLSearchParams({ clientId, petId, serviceId, date });
+      const params = bookingParams({ clientId, petId, serviceId, date }, extraIds);
       return (await ownerRequest(`${appointmentsUrl}/availability?${params}`, { signal })).json();
     },
   });
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (saving || !slots.data?.includes(startsAt)) return;
+    if (saving || !quote.data || quote.isFetching || !slots.data?.includes(startsAt)) return;
     setSaving(true);
     setError('');
     try {
       await ownerRequest(appointmentsUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientId, petId, serviceId, startsAt }),
+        body: JSON.stringify({
+          clientId,
+          petId,
+          serviceId,
+          startsAt,
+          extraIds,
+          expectedPrice: quote.data.price,
+          expectedDuration: quote.data.duration,
+          expectedPriceMax: quote.data.priceMax ?? quote.data.price,
+        }),
       });
       onSaved(date);
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : 'No se pudo guardar la cita.');
       setStart('');
-      await slots.refetch();
+      await Promise.all([slots.refetch(), quote.refetch()]);
     } finally {
       setSaving(false);
     }
@@ -110,6 +128,7 @@ export function ManualBooking({
                 setClient(e.target.value);
                 setPet('');
                 setService('');
+                setExtras([]);
                 setStart('');
               }}
             >
@@ -130,6 +149,7 @@ export function ManualBooking({
               onChange={(e) => {
                 setPet(e.target.value);
                 setService('');
+                setExtras([]);
                 setStart('');
               }}
             >
@@ -149,6 +169,7 @@ export function ManualBooking({
               disabled={!petId}
               onChange={(e) => {
                 setService(e.target.value);
+                setExtras([]);
                 setStart('');
               }}
             >
@@ -160,6 +181,16 @@ export function ManualBooking({
               ))}
             </select>
           </Field>
+          {canQuote && (
+            <BookingExtras
+              quote={quote}
+              selected={extraIds}
+              onChange={(ids) => {
+                setExtras(ids);
+                setStart('');
+              }}
+            />
+          )}
           <Field label="Fecha" htmlFor="booking-date">
             <input
               id="booking-date"
@@ -203,7 +234,10 @@ export function ManualBooking({
             <p>No quedan huecos para este servicio en la fecha elegida.</p>
           )}
           {error && <Notice error>{error}</Notice>}
-          <Button type="submit" disabled={!startsAt || slots.isFetching || saving}>
+          <Button
+            type="submit"
+            disabled={!startsAt || slots.isFetching || quote.isFetching || saving}
+          >
             {saving ? 'Guardando…' : 'Guardar cita'}
           </Button>
         </fieldset>

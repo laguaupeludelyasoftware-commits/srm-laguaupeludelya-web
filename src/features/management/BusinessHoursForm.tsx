@@ -61,7 +61,10 @@ function ScheduleEditor({ initial }: { initial: BusinessInterval[] }) {
           key: `saved-${index}`,
         })),
       );
-      await queryClient.invalidateQueries({ queryKey: ['public-business'] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['public-business'] }),
+        queryClient.invalidateQueries({ queryKey: ['owner-schedule-exceptions'] }),
+      ]);
       setMessage('Horario actualizado en la web.');
     } catch {
       setError('No se pudo guardar el horario.');

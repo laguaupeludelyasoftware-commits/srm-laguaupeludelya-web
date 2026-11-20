@@ -5,6 +5,7 @@ import { useDemo } from '../../data/demo-store';
 import type { Pet, Species } from '../../domain/models';
 
 export type PetDetails = Omit<Pet, 'id' | 'clientId'>;
+export const coatOptions = ['Corto', 'Medio', 'Largo', 'Doble capa', 'Rizado', 'Duro', 'No lo sé'];
 
 /** Lee los campos que comparten el alta real y el formulario de demostración. */
 export function readPetFields(form: HTMLFormElement): PetDetails {
@@ -85,11 +86,9 @@ export function PetFields({ species, pet }: { species: Species[]; pet?: PetDetai
         </Field>
         <Field label="Pelaje" htmlFor="pet-coat">
           <select id="pet-coat" name="coat" defaultValue={pet?.coat ?? 'No lo sé'}>
-            <option>Corto</option>
-            <option>Largo</option>
-            <option>Rizado</option>
-            <option>Duro</option>
-            <option>No lo sé</option>
+            {coatOptions.map((coat) => (
+              <option key={coat}>{coat}</option>
+            ))}
           </select>
         </Field>
       </div>

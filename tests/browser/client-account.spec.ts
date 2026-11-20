@@ -20,13 +20,24 @@ test('reserva con el correo pendiente y recupera la cita al recargar', async ({ 
   );
   const startsAt = '2027-01-12T10:00:00';
   let booked = false;
+  await page.route('**/api/auth/client/appointments/quote?*', (route) =>
+    route.fulfill({ json: { price: 25, duration: 45, availableExtras: [] } }),
+  );
   await page.route('**/api/auth/client/appointments/availability?*', (route) =>
     route.fulfill(booked ? { status: 409 } : { json: [startsAt] }),
   );
   await page.route('**/api/auth/client/appointments', (route) => {
     if (route.request().method() === 'POST') {
       expect(route.request().headers().authorization).toBe('Bearer client-test');
-      expect(route.request().postDataJSON()).toEqual({ petId: 'pet', serviceId: 'bath', startsAt });
+      expect(route.request().postDataJSON()).toEqual({
+        petId: 'pet',
+        serviceId: 'bath',
+        startsAt,
+        extraIds: [],
+        expectedPrice: 25,
+        expectedDuration: 45,
+        expectedPriceMax: 25,
+      });
       booked = true;
       return route.fulfill({ status: 201 });
     }

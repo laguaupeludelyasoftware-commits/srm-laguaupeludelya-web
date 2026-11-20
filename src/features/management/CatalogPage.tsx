@@ -7,6 +7,8 @@ import { Button, Field, Modal, Notice } from '../../components/ui';
 import type { Service, Species } from '../../domain/models';
 import { euros } from '../../domain/rules';
 import { ownerToken } from './OwnerAccess';
+import { CatalogExtras } from './CatalogExtras';
+import { CatalogVariants } from './CatalogVariants';
 
 const catalogUrl = '/api/management/services';
 const catalogKey = ['owner-catalog'];
@@ -26,6 +28,8 @@ export function CatalogPage() {
     },
   });
   const [editing, setEditing] = useState<Service | 'new' | null>(null);
+  const [extrasService, setExtrasService] = useState<Service | null>(null);
+  const [variantService, setVariantService] = useState<Service | null>(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -144,9 +148,21 @@ export function CatalogPage() {
             >
               <Pencil size={15} /> Editar servicio
             </Button>
+            <Button variant="outline" onClick={() => setExtrasService(s)}>
+              Gestionar extras
+            </Button>
+            <Button variant="outline" onClick={() => setVariantService(s)}>
+              Gestionar variantes
+            </Button>
           </article>
         ))}
       </div>
+      {extrasService && (
+        <CatalogExtras service={extrasService} onClose={() => setExtrasService(null)} />
+      )}
+      {variantService && (
+        <CatalogVariants service={variantService} onClose={() => setVariantService(null)} />
+      )}
       <Modal
         title={current ? 'Afinamos este cuidado' : 'Un nuevo cuidado'}
         description="Los servicios publicados aparecen en la web y en el formulario de reserva."

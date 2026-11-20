@@ -78,6 +78,10 @@ export function availableSlots(
 }
 
 /** Presenta cantidades en euros conservando los céntimos cuando corresponden. */
+export function bookingPrice(min: number, max?: number | null): string {
+  return max != null && max > min ? `${euros(min)} – ${euros(max)}` : euros(min);
+}
+
 export function euros(value: number): string {
   return new Intl.NumberFormat('es-ES', {
     style: 'currency',

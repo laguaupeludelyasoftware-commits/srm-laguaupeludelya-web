@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { Button, Field, Notice } from '../../components/ui';
-import { euros, statusLabels } from '../../domain/rules';
+import { bookingPrice, statusLabels } from '../../domain/rules';
 import { ownerRequest } from './ManualBooking';
 import { WhatsAppContact } from './WhatsAppActions';
 
@@ -110,6 +110,8 @@ export function ManagementClientProfile({ path, onSaved }: { path: string; onSav
 }
 
 type Visit = {
+  variantName?: string | null;
+  priceMax?: number | null;
   id: string;
   startsAt: string;
   serviceName: string;
@@ -177,8 +179,10 @@ export function ManagementPetProfile({ path }: { path: string }) {
                 <strong>{visit.serviceName}</strong> · {historyLabels[visit.status] ?? visit.status}
                 <p>
                   {visit.startsAt.slice(0, 10).split('-').reverse().join('/')} ·{' '}
-                  {visit.startsAt.slice(11, 16)} · {visit.duration} min · {euros(visit.price)}
+                  {visit.startsAt.slice(11, 16)} · {visit.duration} min ·{' '}
+                  {bookingPrice(visit.price, visit.priceMax)}
                 </p>
+                {visit.variantName && <p>Variante: {visit.variantName}</p>}
               </li>
             ))}
           </ul>

@@ -1,5 +1,49 @@
 import { expect, test } from '@playwright/test';
 
+test('carga un ejemplo editable de variante y lo guarda desactivado', async ({ page }) => {
+  await page.addInitScript(() => sessionStorage.setItem('guaupelu-owner-session', 'owner-test'));
+  await page.route('**/api/management/session', (route) => route.fulfill({ status: 204 }));
+  await page.route('**/api/management/services', (route) =>
+    route.fulfill({
+      json: [
+        {
+          id: 'bath',
+          name: 'Baño',
+          description: '',
+          price: 25,
+          duration: 45,
+          species: ['Perro'],
+          active: true,
+        },
+      ],
+    }),
+  );
+  let saved: object | undefined;
+  await page.route('**/api/management/services/bath/variants', (route) => {
+    if (route.request().method() === 'POST') {
+      saved = route.request().postDataJSON();
+      expect(saved).toMatchObject({
+        minWeight: 10,
+        maxWeight: 25,
+        price: 30,
+        priceMax: 38,
+        active: false,
+      });
+      return route.fulfill({ status: 201 });
+    }
+    return route.fulfill({ json: saved ? [{ id: 'variant', rule: saved }] : [] });
+  });
+  await page.goto('/gestion/servicios');
+  await page.getByRole('button', { name: 'Gestionar variantes' }).click();
+  await page.getByRole('button', { name: 'Cargar ejemplo' }).click();
+  await expect(page.getByLabel('Publicar variante')).not.toBeChecked();
+  expect(saved).toBeUndefined();
+  await page.getByLabel('Nombre de la variante').fill('Tramo largo');
+  await page.getByRole('button', { name: 'Guardar variante' }).click();
+  await expect(page.getByText('Tramo largo')).toBeVisible();
+  await expect(page.getByText(/Prioridad 10 · Desactivada/)).toBeVisible();
+});
+
 test('guarda una cita con un hueco de la API y la recupera al recargar', async ({ page }) => {
   await page.addInitScript(() => sessionStorage.setItem('guaupelu-owner-session', 'owner-test'));
   await page.route('**/api/management/session', (route) => route.fulfill({ status: 204 }));
@@ -47,15 +91,32 @@ test('guarda una cita con un hueco de la API y la recupera al recargar', async (
     const date = new URL(route.request().url()).searchParams.get('date');
     return route.fulfill({ json: [`${date}T10:00:00`] });
   });
+  await page.route('**/api/management/appointments/quote?*', (route) => {
+    const extra = { id: 'extra', name: 'Cepillado extra', price: 7.5, duration: 15, active: true };
+    const selected = new URL(route.request().url()).searchParams.has('extraIds');
+    return route.fulfill({
+      json: {
+        price: selected ? 32.5 : 25,
+        priceMax: selected ? 40 : 32.5,
+        variantName: 'Manto corto',
+        duration: selected ? 60 : 45,
+        availableExtras: [extra],
+      },
+    });
+  });
   await page.route('**/api/management/appointments**', (route) => {
     const request = route.request();
-    if (new URL(request.url()).pathname.endsWith('/availability')) return route.fallback();
+    if (/\/(availability|quote)$/.test(new URL(request.url()).pathname)) return route.fallback();
     if (request.method() === 'POST') {
       expect(request.headers().authorization).toBe('Bearer owner-test');
       expect(request.postDataJSON()).toMatchObject({
         clientId: 'client',
         petId: 'pet',
         serviceId: 'bath',
+        extraIds: ['extra'],
+        expectedPrice: 32.5,
+        expectedDuration: 60,
+        expectedPriceMax: 40,
       });
       startsAt = request.postDataJSON().startsAt;
       return route.fulfill({ status: 201 });
@@ -66,14 +127,17 @@ test('guarda una cita con un hueco de la API y la recupera al recargar', async (
             {
               id: 'appointment',
               startsAt,
-              duration: 45,
-              price: 25,
+              duration: 60,
+              price: 32.5,
               serviceName: 'Baño',
               petName: 'Milo',
               clientName: 'Ana',
               clientId: 'client',
               petId: 'pet',
               clientPhone: '600 123 456',
+              extraNames: ['Cepillado extra'],
+              variantName: 'Manto corto',
+              priceMax: 40,
               status: 'CONFIRMED',
               canRecordAttendance: false,
             },
@@ -87,13 +151,16 @@ test('guarda una cita con un hueco de la API y la recupera al recargar', async (
   await page.getByLabel('Cliente', { exact: true }).selectOption('client');
   await page.getByLabel('Mascota', { exact: true }).selectOption('pet');
   await page.getByLabel('Servicio', { exact: true }).selectOption('bath');
+  await expect(page.getByText('Variante aplicada: Manto corto')).toBeVisible();
+  await page.getByLabel(/Cepillado extra/).check();
   await page.getByLabel('Hora de Madrid').selectOption({ label: '10:00' });
   await page.getByRole('button', { name: 'Guardar cita' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  const appointment = page.getByRole('button', { name: /Milo, 10:00, 45 min/ });
+  const appointment = page.getByRole('button', { name: /Milo, 10:00, 60 min/ });
   await expect(appointment).toBeVisible();
   await page.reload();
   await appointment.click();
+  await expect(page.getByRole('dialog').getByText('Extras: Cepillado extra')).toBeVisible();
   await expect(page.getByRole('dialog').getByRole('link', { name: 'Ana' })).toHaveAttribute(
     'href',
     '/gestion/clientes?cliente=client',

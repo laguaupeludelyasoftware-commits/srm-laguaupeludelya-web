@@ -4,7 +4,8 @@ import { Link } from 'react-router-dom';
 import { Button, Field, Notice } from '../../components/ui';
 import { usePublicBusiness } from '../../data/public-business';
 import type { Species } from '../../domain/models';
-import { euros } from '../../domain/rules';
+import { bookingPrice, euros } from '../../domain/rules';
+import { BookingExtras, bookingParams, useBookingQuote } from '../booking/BookingExtras';
 
 const url = '/api/auth/client/appointments';
 type Visit = {
@@ -18,6 +19,9 @@ type Visit = {
   canCancel: boolean;
   cancellationHours: number;
   rejectionReason: string | null;
+  extraNames?: string[];
+  variantName?: string | null;
+  priceMax?: number | null;
 };
 
 const visitLabels: Record<Visit['status'], string> = {
@@ -38,6 +42,7 @@ export function OnlineBooking({
 }) {
   const [petId, setPet] = useState('');
   const [serviceId, setService] = useState(initialService);
+  const [extraIds, setExtras] = useState<string[]>([]);
   const [date, setDate] = useState('');
   const [start, setStart] = useState('');
   const [pending, setPending] = useState(false);
@@ -75,14 +80,21 @@ export function OnlineBooking({
     (service) => !pet || service.species.includes(pet.species),
   );
   const selected = services?.find((entry) => entry.id === serviceId);
+  const canQuote = !!(pet && selected);
+  const quote = useBookingQuote(
+    url,
+    token,
+    bookingParams({ petId, serviceId }, extraIds),
+    canQuote,
+  );
   const slots = useQuery({
-    queryKey: ['online-booking-slots', token, petId, serviceId, date],
-    enabled: !!(pet && selected && date),
+    queryKey: ['online-booking-slots', token, petId, serviceId, date, extraIds],
+    enabled: !!(canQuote && date && quote.isSuccess && !quote.isPlaceholderData),
     gcTime: 0,
     retry: false,
     queryFn: async ({ signal }): Promise<string[]> => {
       const result = await request(
-        `${url}/availability?${new URLSearchParams({ date, petId, serviceId })}`,
+        `${url}/availability?${bookingParams({ date, petId, serviceId }, extraIds)}`,
         { signal },
       );
       if (result.status === 403)
@@ -104,7 +116,15 @@ export function OnlineBooking({
           ? {}
           : {
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ petId, serviceId, startsAt: start }),
+              body: JSON.stringify({
+                petId,
+                serviceId,
+                startsAt: start,
+                extraIds,
+                expectedPrice: quote.data?.price,
+                expectedDuration: quote.data?.duration,
+                expectedPriceMax: quote.data?.priceMax ?? quote.data?.price,
+              }),
             }),
       });
       if (result.status === 403) throw new Error('Contacta con Nazaret para revisar tu cuenta.');
@@ -115,6 +135,7 @@ export function OnlineBooking({
       setCancelId('');
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : 'No se pudo completar la operación.');
+      if (!visitId) await quote.refetch();
     } finally {
       setStart('');
       await Promise.all([
@@ -128,7 +149,8 @@ export function OnlineBooking({
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!pending && start && slots.data?.includes(start)) void update();
+    if (!pending && quote.data && !quote.isFetching && start && slots.data?.includes(start))
+      void update();
   }
 
   return (
@@ -153,6 +175,7 @@ export function OnlineBooking({
               const next = pets.data?.find((entry) => entry.id === event.target.value);
               setPet(event.target.value);
               if (next && selected && !selected.species.includes(next.species)) setService('');
+              setExtras([]);
               setStart('');
             }}
           >
@@ -171,6 +194,7 @@ export function OnlineBooking({
             value={selected?.id ?? ''}
             onChange={(event) => {
               setService(event.target.value);
+              setExtras([]);
               setStart('');
             }}
           >
@@ -182,10 +206,21 @@ export function OnlineBooking({
             ))}
           </select>
         </Field>
-        {selected && (
-          <p>
-            {selected.duration} min · {euros(selected.price)}
-          </p>
+        {canQuote ? (
+          <BookingExtras
+            quote={quote}
+            selected={extraIds}
+            onChange={(ids) => {
+              setExtras(ids);
+              setStart('');
+            }}
+          />
+        ) : (
+          selected && (
+            <p>
+              {selected.duration} min · {euros(selected.price)}
+            </p>
+          )
         )}
         <Field label="Fecha" htmlFor="online-date">
           <input
@@ -218,7 +253,7 @@ export function OnlineBooking({
         {slots.isFetching && <p role="status">Buscando huecos…</p>}
         {slots.isError && <Notice error>{slots.error.message}</Notice>}
         {slots.data?.length === 0 && <p>No quedan huecos para esta fecha.</p>}
-        <Button type="submit" disabled={!start || pending || slots.isFetching}>
+        <Button type="submit" disabled={!start || pending || slots.isFetching || quote.isFetching}>
           Confirmar cita
         </Button>
       </form>
@@ -233,9 +268,12 @@ export function OnlineBooking({
           <h3>
             {visit.petName} · {visit.serviceName}
           </h3>
+          {!!visit.extraNames?.length && <p>Extras: {visit.extraNames.join(', ')}</p>}
+          {visit.variantName && <p>Variante: {visit.variantName}</p>}
           <p>
             {visit.startsAt.slice(0, 10).split('-').reverse().join('/')} ·{' '}
-            {visit.startsAt.slice(11, 16)} · {visit.duration} min · {euros(visit.price)}
+            {visit.startsAt.slice(11, 16)} · {visit.duration} min ·{' '}
+            {bookingPrice(visit.price, visit.priceMax)}
           </p>
           <p>{visitLabels[visit.status]}</p>
           {visit.rejectionReason && <p>{visit.rejectionReason}</p>}
