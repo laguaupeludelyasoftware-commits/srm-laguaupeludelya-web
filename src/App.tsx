@@ -43,6 +43,9 @@ const CatalogPage = lazy(() =>
 const SettingsPage = lazy(() =>
   import('./features/management/SettingsPage').then((m) => ({ default: m.SettingsPage })),
 );
+const DemoSettingsPage = lazy(() =>
+  import('./features/management/SettingsPage').then((m) => ({ default: m.DemoSettingsPage })),
+);
 
 // Preparado para consultas de la API futura; el prototipo utiliza un adaptador local síncrono.
 const queryClient = new QueryClient({
@@ -102,10 +105,12 @@ export function App() {
                   }
                 >
                   <Route index element={<AgendaPage />} />
+                  <Route path="demo/agenda" element={<AgendaPage demo />} />
                   <Route path="clientes" element={<RegisteredClientsPage />} />
                   <Route path="demo/clientes" element={<ClientsPage />} />
                   <Route path="demo/reservar" element={<BookingPage />} />
                   <Route path="demo/mi-espacio" element={<CustomerPage />} />
+                  <Route path="demo/configuracion" element={<DemoSettingsPage />} />
                   <Route path="servicios" element={<CatalogPage />} />
                   <Route path="configuracion" element={<SettingsPage />} />
                 </Route>

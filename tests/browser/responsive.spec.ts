@@ -115,7 +115,7 @@ test('clientes accesibles y formulario sin zoom de iOS', async ({ page }, testIn
 });
 
 test('agenda semanal contenida y mes utilizable con tacto', async ({ page }, testInfo) => {
-  await page.goto('/gestion');
+  await page.goto('/gestion/demo/agenda');
   await expect(page.getByRole('button', { name: 'Semana', exact: true })).toHaveAttribute(
     'aria-pressed',
     'true',
@@ -195,12 +195,19 @@ test('agenda semanal contenida y mes utilizable con tacto', async ({ page }, tes
 test('acciones táctiles y guardado de la política en tablet y móvil', async ({
   page,
 }, testInfo) => {
+  let cancellationHours = 8;
+  await page.route('**/api/management/appointments/policy', (route) => {
+    if (route.request().method() === 'PUT') {
+      cancellationHours = route.request().postDataJSON().cancellationHours;
+    }
+    return route.fulfill({ json: { cancellationHours } });
+  });
   await page.goto('/gestion/configuracion');
-  await page.getByLabel('Antelación mínima para cancelar (horas)').fill('12');
-  await page.getByRole('button', { name: 'Guardar cambios', exact: true }).click();
-  await expect(page.getByText(/Configuración guardada/)).toBeVisible();
+  await page.getByLabel('Plazo de cancelación (horas)').fill('12');
+  await page.getByRole('button', { name: 'Guardar plazo', exact: true }).click();
+  await expect(page.getByText('Plazo de cancelación guardado.')).toBeVisible();
   await page.reload();
-  await expect(page.getByLabel('Antelación mínima para cancelar (horas)')).toHaveValue('12');
+  await expect(page.getByLabel('Plazo de cancelación (horas)')).toHaveValue('12');
   if (testInfo.project.name !== 'escritorio') {
     const smallControls = await page.locator('.button, .icon-button').evaluateAll((elements) =>
       elements

@@ -2,9 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Field, Notice } from '../../components/ui';
-import { usePublicBusiness } from '../../data/public-business';
-import { euros } from '../../domain/rules';
 import { ClientPets } from './ClientPets';
+import { OnlineBooking } from './OnlineBooking';
 
 const sessionKey = 'guaupelu-client-session';
 
@@ -183,6 +182,9 @@ export function ClientAccount() {
             </Button>
           </div>
           <ClientPets token={token} />
+          <Button asChild>
+            <Link to="/reservar">Reservar o consultar mis citas</Link>
+          </Button>
         </>
       )}
     </section>
@@ -191,6 +193,7 @@ export function ClientAccount() {
 
 /** Protege el acceso público a reservas y conserva el servicio elegido durante el registro. */
 export function ClientBooking() {
+  const [params] = useSearchParams();
   const location = useLocation();
   const token = sessionStorage.getItem(sessionKey);
   const profile = useClientProfile(token);
@@ -212,34 +215,9 @@ export function ClientBooking() {
           <Button onClick={() => void profile.refetch()}>Reintentar</Button>
         </>
       )}
-      {profile.isSuccess && profile.data && <BookingStatus account={profile.data} />}
-    </section>
-  );
-}
-
-function BookingStatus({ account }: { account: ClientProfile }) {
-  const [params] = useSearchParams();
-  const catalog = usePublicBusiness();
-  const service = catalog.data?.services.find((entry) => entry.id === params.get('servicio'));
-  return (
-    <div className="panel settings-panel">
-      <h1>Reservar cita</h1>
-      {service && (
-        <>
-          <h2>{service.name}</h2>
-          <p>
-            {service.duration} min · desde {euros(service.price)}
-          </p>
-        </>
+      {profile.isSuccess && profile.data && (
+        <OnlineBooking token={token} initialService={params.get('servicio') ?? ''} />
       )}
-      <Notice>
-        {account.emailVerified
-          ? 'Las reservas online todavía no están disponibles.'
-          : 'Necesitarás verificar tu correo para reservar. La verificación por correo aún no está disponible.'}
-      </Notice>
-      <Button asChild>
-        <Link to="/mi-espacio">Ir a mi perfil y mascotas</Link>
-      </Button>
-    </div>
+    </section>
   );
 }

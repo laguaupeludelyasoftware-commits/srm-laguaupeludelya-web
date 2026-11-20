@@ -8,9 +8,26 @@ import type { Species } from '../../domain/models';
 import { BusinessContactForm } from './BusinessContactForm';
 import { OwnerPasswordForm } from './OwnerPasswordForm';
 import { BusinessHoursForm } from './BusinessHoursForm';
+import { BookingPolicyForm } from './BookingPolicyForm';
 
-/** Horarios simples de ejemplo y política inicial visibles para la dueña. */
 export function SettingsPage() {
+  return (
+    <>
+      <PageHeading
+        eyebrow="GESTIÓN"
+        title="Configuración"
+        description="Gestiona el contacto, los horarios y el plazo de cancelación."
+      />
+      <BusinessContactForm />
+      <BusinessHoursForm />
+      <BookingPolicyForm />
+      <OwnerPasswordForm />
+    </>
+  );
+}
+
+/** Configuración local para los recorridos privados de demostración. */
+export function DemoSettingsPage() {
   const { state, update, reset } = useDemo();
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -57,9 +74,6 @@ export function SettingsPage() {
       />
       {message && <Notice>{message}</Notice>}
       {error && <Notice error>{error}</Notice>}
-      <BusinessContactForm />
-      <BusinessHoursForm />
-      <OwnerPasswordForm />
       <form onSubmit={save} className="settings-grid">
         <section className="panel settings-panel">
           <span className="eyebrow">UN RATITO PARA CADA UNO</span>
