@@ -52,7 +52,7 @@ export function BusinessContactForm() {
       {business.isPending && <p role="status">Cargando datos de contacto…</p>}
       {business.isError && <Notice error>No se pudo consultar el contacto.</Notice>}
       {business.isSuccess && (
-        <form onSubmit={save} key={JSON.stringify(contact)}>
+        <form className="form-stack" onSubmit={save} key={JSON.stringify(contact)}>
           <Field label="Teléfono" htmlFor="business-phone">
             <input
               id="business-phone"

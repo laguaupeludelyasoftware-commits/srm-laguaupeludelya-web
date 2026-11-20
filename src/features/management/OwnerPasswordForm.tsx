@@ -67,7 +67,7 @@ export function OwnerPasswordForm() {
   return (
     <section className="panel settings-panel">
       <h2>Cambiar contraseña</h2>
-      <form onSubmit={save}>
+      <form className="form-stack" onSubmit={save}>
         <Field label="Contraseña actual" htmlFor="owner-current-password">
           <input
             id="owner-current-password"

@@ -20,12 +20,14 @@ export function SettingsPage() {
         title="Configuración"
         description="Gestiona el contacto, los horarios y el plazo de cancelación."
       />
-      <BusinessContactForm />
-      <BusinessHoursForm />
-      <ScheduleExceptionsForm />
-      <BookingPolicyForm />
-      <ReminderSettings />
-      <OwnerPasswordForm />
+      <div className="management-stack management-settings">
+        <BusinessContactForm />
+        <BusinessHoursForm />
+        <ScheduleExceptionsForm />
+        <BookingPolicyForm />
+        <ReminderSettings />
+        <OwnerPasswordForm />
+      </div>
     </>
   );
 }

@@ -83,21 +83,21 @@ export function CatalogVariants({ service, onClose }: { service: Service; onClos
   return (
     <Modal
       open
-      title={`Variantes de ${service.name}`}
-      description="Si coinciden varias variantes publicadas, el número de prioridad más alto decide cuál se aplica."
+      title={`Ajustes por mascota · ${service.name}`}
+      description="Cambia automáticamente el precio o la duración del servicio según el peso, la raza o el pelaje. Por ejemplo, un baño puede durar más para un perro de pelo largo."
       onOpenChange={(open) => {
         if (!open && !save.isPending) onClose();
       }}
     >
-      {variants.isPending && <p role="status">Cargando variantes…</p>}
-      {variants.isError && <Notice error>No se pudieron consultar las variantes.</Notice>}
+      {variants.isPending && <p role="status">Cargando ajustes…</p>}
+      {variants.isError && <Notice error>No se pudieron consultar los ajustes.</Notice>}
       {!editing ? (
         <div className="form-stack">
           {variants.data?.length === 0 && (
             <p>Las reservas usan ahora el precio y la duración base del servicio.</p>
           )}
           {variants.data?.map((variant) => (
-            <div className="section-bar" key={variant.id}>
+            <div className="catalog-option-row" key={variant.id}>
               <div>
                 <strong>{variant.rule.name}</strong>
                 <p>
@@ -105,7 +105,7 @@ export function CatalogVariants({ service, onClose }: { service: Service; onClos
                   {variant.rule.priceMax != null && ` – ${euros(variant.rule.priceMax)}`}
                   {' · '}
                   {variant.rule.duration} min · Prioridad {variant.rule.priority} ·{' '}
-                  {variant.rule.active ? 'Publicada' : 'Desactivada'}
+                  {variant.rule.active ? 'Publicado' : 'Desactivado'}
                 </p>
               </div>
               <Button
@@ -127,7 +127,7 @@ export function CatalogVariants({ service, onClose }: { service: Service; onClos
               setEditing('new');
             }}
           >
-            Nueva variante
+            Nuevo ajuste
           </Button>
           <Button
             type="button"
@@ -142,7 +142,7 @@ export function CatalogVariants({ service, onClose }: { service: Service; onClos
         </div>
       ) : (
         <form className="form-stack" onSubmit={submit} key={current?.id ?? String(editing)}>
-          <Field label="Nombre de la variante" htmlFor="variant-name">
+          <Field label="Nombre del ajuste" htmlFor="variant-name">
             <input
               id="variant-name"
               name="name"
@@ -254,16 +254,16 @@ export function CatalogVariants({ service, onClose }: { service: Service; onClos
           </div>
           <label className="checkbox-line">
             <input type="checkbox" name="active" defaultChecked={initial?.active ?? false} />{' '}
-            Publicar variante
+            Publicar ajuste
           </label>
           {save.isError && (
             <Notice error>
-              No se pudo guardar la variante. Revisa los límites, el precio y que la prioridad sea
+              No se pudo guardar el ajuste. Revisa los límites, el precio y que la prioridad sea
               única.
             </Notice>
           )}
           <Button type="submit" disabled={save.isPending}>
-            Guardar variante
+            Guardar ajuste
           </Button>
           <Button
             type="button"
@@ -271,7 +271,7 @@ export function CatalogVariants({ service, onClose }: { service: Service; onClos
             disabled={save.isPending}
             onClick={() => setEditing(undefined)}
           >
-            Volver a variantes
+            Volver a ajustes
           </Button>
         </form>
       )}

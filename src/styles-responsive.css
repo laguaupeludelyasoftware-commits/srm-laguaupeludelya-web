@@ -466,6 +466,11 @@
 }
 
 @media (max-width: 360px) {
+  .catalog-heading-actions .button {
+    gap: 6px;
+    padding-inline: 12px;
+  }
+
   .form-grid {
     grid-template-columns: 1fr;
   }

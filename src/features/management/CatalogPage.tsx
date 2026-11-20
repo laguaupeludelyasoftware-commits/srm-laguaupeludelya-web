@@ -29,7 +29,7 @@ export function CatalogPage() {
     },
   });
   const [editing, setEditing] = useState<ManagedService | 'new' | null>(null);
-  const [managingExtras, setManagingExtras] = useState(false);
+  const [extrasDialog, setExtrasDialog] = useState<'list' | 'new'>();
   const [variantService, setVariantService] = useState<Service | null>(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -101,10 +101,7 @@ export function CatalogPage() {
         title="Servicios con tu sello."
         description="Lo que ofreces y cómo lo cuentas, en un mismo lugar."
         action={
-          <div className="choice-row">
-            <Button variant="outline" onClick={() => setManagingExtras(true)}>
-              Gestionar extras
-            </Button>
+          <div className="catalog-heading-actions">
             <Button
               onClick={() => {
                 setError('');
@@ -113,9 +110,20 @@ export function CatalogPage() {
             >
               <Plus size={17} /> Nuevo servicio
             </Button>
+            <Button variant="outline" onClick={() => setExtrasDialog('new')}>
+              <Plus size={17} /> Nuevo extra
+            </Button>
           </div>
         }
       />
+      <div className="catalog-extras-help">
+        <p className="muted">
+          Crea primero los extras. Después podrás añadirlos al crear o editar un servicio.
+        </p>
+        <Button variant="outline" onClick={() => setExtrasDialog('list')}>
+          Gestionar extras
+        </Button>
+      </div>
       {message && <Notice>{message}</Notice>}
       {catalog.isPending && <p role="status">Cargando servicios…</p>}
       {catalog.isError && <Notice error>No se pudo consultar el catálogo.</Notice>}
@@ -151,22 +159,29 @@ export function CatalogPage() {
                 <Clock3 size={14} /> {s.duration} min
               </span>
             </div>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setError('');
-                setEditing(s);
-              }}
-            >
-              <Pencil size={15} /> Editar servicio
-            </Button>
-            <Button variant="outline" onClick={() => setVariantService(s)}>
-              Gestionar variantes
-            </Button>
+            <div className="catalog-card-actions">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setError('');
+                  setEditing(s);
+                }}
+              >
+                <Pencil size={15} /> Editar servicio
+              </Button>
+              <Button variant="outline" onClick={() => setVariantService(s)}>
+                Ajustes por mascota
+              </Button>
+            </div>
           </article>
         ))}
       </div>
-      {managingExtras && <CatalogExtras onClose={() => setManagingExtras(false)} />}
+      {extrasDialog && (
+        <CatalogExtras
+          startCreating={extrasDialog === 'new'}
+          onClose={() => setExtrasDialog(undefined)}
+        />
+      )}
       {variantService && (
         <CatalogVariants service={variantService} onClose={() => setVariantService(null)} />
       )}

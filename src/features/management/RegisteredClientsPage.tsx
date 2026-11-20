@@ -55,87 +55,98 @@ export function RegisteredClientsPage() {
             : 'Consulta las fichas de clientes y sus mascotas.'
         }
       />
-      {clients.isPending && <p role="status">Cargando clientes…</p>}
-      {clients.isError && (
-        <>
-          <Notice error>No se pudieron consultar los clientes.</Notice>
-          <Button type="button" onClick={() => void clients.refetch()}>
-            Reintentar
-          </Button>
-        </>
-      )}
-      {selected && token && (
-        <>
-          <Link className="inline-link" to="/gestion/clientes">
-            Volver a clientes
-          </Link>
-          {petId ? (
-            <>
-              <Link className="inline-link" to={`?cliente=${encodeURIComponent(selected.id)}`}>
-                Volver a la ficha de {selected.name}
+      <div className="management-stack">
+        {clients.isPending && <p role="status">Cargando clientes…</p>}
+        {clients.isError && (
+          <>
+            <Notice error>No se pudieron consultar los clientes.</Notice>
+            <Button type="button" onClick={() => void clients.refetch()}>
+              Reintentar
+            </Button>
+          </>
+        )}
+        {selected && token && (
+          <>
+            <nav className="choice-row" aria-label="Navegación de fichas">
+              <Link className="inline-link" to="/gestion/clientes">
+                Volver a clientes
               </Link>
-              <ClientPets key={petId} token={token} clientId={selected.id} selectedPetId={petId} />
-              <ManagementPetProfile
-                key={petId}
-                path={`/api/management/clients/${encodeURIComponent(selected.id)}/pets/${encodeURIComponent(petId)}`}
+              {petId && (
+                <Link className="inline-link" to={`?cliente=${encodeURIComponent(selected.id)}`}>
+                  Volver a la ficha de {selected.name}
+                </Link>
+              )}
+            </nav>
+            {petId ? (
+              <>
+                <ClientPets
+                  key={petId}
+                  token={token}
+                  clientId={selected.id}
+                  selectedPetId={petId}
+                />
+                <ManagementPetProfile
+                  key={petId}
+                  path={`/api/management/clients/${encodeURIComponent(selected.id)}/pets/${encodeURIComponent(petId)}`}
+                />
+              </>
+            ) : (
+              <>
+                <ManagementClientProfile
+                  key={selected.id}
+                  path={`/api/management/clients/${encodeURIComponent(selected.id)}`}
+                  onSaved={() => {
+                    void clients.refetch();
+                  }}
+                />
+                <ClientPets key={selected.id} token={token} clientId={selected.id} />
+              </>
+            )}
+          </>
+        )}
+        {clients.isSuccess && !selected && (
+          <>
+            <Field label="Buscar por nombre, teléfono o correo" htmlFor="registered-client-search">
+              <input
+                id="registered-client-search"
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
               />
-            </>
-          ) : (
-            <>
-              <ManagementClientProfile
-                key={selected.id}
-                path={`/api/management/clients/${encodeURIComponent(selected.id)}`}
-                onSaved={() => {
-                  void clients.refetch();
-                }}
-              />
-              <ClientPets key={selected.id} token={token} clientId={selected.id} />
-            </>
-          )}
-        </>
-      )}
-      {clients.isSuccess && !selected && (
-        <>
-          <Field label="Buscar por nombre, teléfono o correo" htmlFor="registered-client-search">
-            <input
-              id="registered-client-search"
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-          </Field>
-          {matching?.length === 0 && (
-            <EmptyState
-              title={filter ? 'No hay coincidencias' : 'Todavía no hay fichas de clientes'}
-            >
-              {filter
-                ? 'Prueba con otro nombre, teléfono o correo.'
-                : 'Las fichas aparecerán aquí cuando el cliente se registre o lo añadas desde Nueva cita.'}
-            </EmptyState>
-          )}
-          <div className="catalog-grid">
-            {matching?.map((client) => (
-              <article className="panel catalog-card" key={client.id}>
-                <h2>{client.name}</h2>
-                {client.email && <p>{client.email}</p>}
-                {client.phone && <p>{client.phone}</p>}
-                <p>
-                  {client.hasAccount === false
-                    ? 'Sin cuenta web'
-                    : client.emailVerified
-                      ? 'Correo verificado'
-                      : 'Correo pendiente de verificar'}
-                </p>
-                <Button asChild variant="outline">
-                  <Link to={`?cliente=${encodeURIComponent(client.id)}`}>
-                    Ver ficha de {client.name}
-                  </Link>
-                </Button>
-              </article>
-            ))}
-          </div>
-        </>
-      )}
+            </Field>
+            {matching?.length === 0 && (
+              <EmptyState
+                title={filter ? 'No hay coincidencias' : 'Todavía no hay fichas de clientes'}
+              >
+                {filter
+                  ? 'Prueba con otro nombre, teléfono o correo.'
+                  : 'Las fichas aparecerán aquí cuando el cliente se registre o lo añadas desde Nueva cita.'}
+              </EmptyState>
+            )}
+            <div className="catalog-grid">
+              {matching?.map((client) => (
+                <article className="panel catalog-card" key={client.id}>
+                  <h2>{client.name}</h2>
+                  {client.email && <p>{client.email}</p>}
+                  {client.phone && <p>{client.phone}</p>}
+                  <p>
+                    {client.hasAccount === false
+                      ? 'Sin cuenta web'
+                      : client.emailVerified
+                        ? 'Correo verificado'
+                        : 'Correo pendiente de verificar'}
+                  </p>
+                  <Button asChild variant="outline">
+                    <Link to={`?cliente=${encodeURIComponent(client.id)}`}>
+                      Ver ficha de {client.name}
+                    </Link>
+                  </Button>
+                </article>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
     </>
   );
 }

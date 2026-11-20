@@ -38,8 +38,16 @@ test('crea un extra de catálogo y lo asigna al crear un servicio', async ({ pag
   });
 
   await page.goto('/gestion/servicios');
-  await page.getByRole('button', { name: 'Gestionar extras' }).click();
-  await page.getByRole('button', { name: 'Nuevo extra' }).click();
+  await expect(page.getByText(/Crea primero los extras/)).toBeVisible();
+  const newService = page.getByRole('button', { name: 'Nuevo servicio' });
+  const newExtra = page.getByRole('button', { name: 'Nuevo extra' });
+  const servicePosition = await newService.boundingBox();
+  const extraPosition = await newExtra.boundingBox();
+  if (!servicePosition || !extraPosition) throw new Error('Faltan las acciones del catálogo.');
+  expect(Math.abs(servicePosition.y - extraPosition.y)).toBeLessThan(2);
+  expect(extraPosition.x - servicePosition.x - servicePosition.width).toBeGreaterThanOrEqual(8);
+  await newExtra.click();
+  await expect(page.getByRole('dialog', { name: 'Nuevo extra' })).toBeVisible();
   await page.getByLabel('Nombre del extra').fill(extra.name);
   await page.getByLabel('Precio adicional').fill(String(extra.price));
   await page.getByLabel('Minutos adicionales').fill(String(extra.duration));
@@ -60,7 +68,9 @@ test('crea un extra de catálogo y lo asigna al crear un servicio', async ({ pag
   await expect(page.getByRole('checkbox', { name: /Cepillado/ })).toBeChecked();
 });
 
-test('carga un ejemplo editable de variante y lo guarda desactivado', async ({ page }) => {
+test('carga un ejemplo editable de ajuste por mascota y lo guarda desactivado', async ({
+  page,
+}) => {
   await page.addInitScript(() => sessionStorage.setItem('guaupelu-owner-session', 'owner-test'));
   await page.route('**/api/management/session', (route) => route.fulfill({ status: 204 }));
   await page.route('**/api/management/services', (route) =>
@@ -94,14 +104,15 @@ test('carga un ejemplo editable de variante y lo guarda desactivado', async ({ p
     return route.fulfill({ json: saved ? [{ id: 'variant', rule: saved }] : [] });
   });
   await page.goto('/gestion/servicios');
-  await page.getByRole('button', { name: 'Gestionar variantes' }).click();
+  await page.getByRole('button', { name: 'Ajustes por mascota' }).click();
+  await expect(page.getByText(/Cambia automáticamente el precio o la duración/)).toBeVisible();
   await page.getByRole('button', { name: 'Cargar ejemplo' }).click();
-  await expect(page.getByLabel('Publicar variante')).not.toBeChecked();
+  await expect(page.getByLabel('Publicar ajuste')).not.toBeChecked();
   expect(saved).toBeUndefined();
-  await page.getByLabel('Nombre de la variante').fill('Tramo largo');
-  await page.getByRole('button', { name: 'Guardar variante' }).click();
+  await page.getByLabel('Nombre del ajuste').fill('Tramo largo');
+  await page.getByRole('button', { name: 'Guardar ajuste' }).click();
   await expect(page.getByText('Tramo largo')).toBeVisible();
-  await expect(page.getByText(/Prioridad 10 · Desactivada/)).toBeVisible();
+  await expect(page.getByText(/Prioridad 10 · Desactivado/)).toBeVisible();
 });
 
 test('guarda una cita con un hueco de la API y la recupera al recargar', async ({ page }) => {

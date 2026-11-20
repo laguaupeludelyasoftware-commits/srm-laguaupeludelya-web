@@ -2162,6 +2162,60 @@ td > small {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
 }
+.management-stack {
+  display: grid;
+  gap: 20px;
+}
+.management-stack > .notice {
+  margin: 0;
+}
+.management-stack > .button {
+  justify-self: start;
+}
+.management-stack > .customer-page {
+  padding-block: 0;
+}
+.management-stack .catalog-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-wrap: anywhere;
+}
+.management-stack .catalog-card > p {
+  min-height: 0;
+  margin: 0;
+}
+.management-stack .catalog-card > .button {
+  margin-top: auto;
+}
+.catalog-heading-actions,
+.catalog-extras-help,
+.catalog-option-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.catalog-heading-actions {
+  flex-shrink: 0;
+  max-width: 100%;
+}
+.catalog-extras-help,
+.catalog-option-row {
+  justify-content: space-between;
+}
+.catalog-extras-help {
+  margin-bottom: 20px;
+  padding: 14px 0;
+  border-block: 1px solid var(--line);
+}
+.catalog-extras-help p {
+  font-size: 0.85rem;
+}
+.catalog-card-actions {
+  display: grid;
+  gap: 10px;
+}
 .catalog-card {
   padding: 25px;
 }
@@ -2241,6 +2295,18 @@ td > small {
 }
 .settings-panel > .field {
   margin-top: 25px;
+}
+.management-settings > .settings-panel {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.management-settings > .settings-panel > * {
+  margin-block: 0;
+}
+.management-settings .settings-panel li.section-bar {
+  margin-bottom: 0;
+  flex-wrap: wrap;
 }
 .hours-head {
   display: grid;

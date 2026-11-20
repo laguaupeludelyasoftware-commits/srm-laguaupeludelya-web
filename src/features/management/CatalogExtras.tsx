@@ -16,9 +16,17 @@ export function useCatalogExtras(enabled = true) {
   });
 }
 
-export function CatalogExtras({ onClose }: { onClose: () => void }) {
+export function CatalogExtras({
+  startCreating,
+  onClose,
+}: {
+  startCreating: boolean;
+  onClose: () => void;
+}) {
   const queryClient = useQueryClient();
-  const [editing, setEditing] = useState<Extra | 'new'>();
+  const [editing, setEditing] = useState<Extra | 'new' | undefined>(
+    startCreating ? 'new' : undefined,
+  );
   const current = typeof editing === 'object' ? editing : undefined;
   const extras = useCatalogExtras();
   const save = useMutation({
@@ -52,19 +60,19 @@ export function CatalogExtras({ onClose }: { onClose: () => void }) {
   return (
     <Modal
       open
-      title="Catálogo de extras"
-      description="Crea extras y asígnalos a los servicios que quieras ofrecerlos."
+      title={editing === 'new' ? 'Nuevo extra' : current ? 'Editar extra' : 'Catálogo de extras'}
+      description="Puedes asignar un extra a varios servicios."
       onOpenChange={(open) => {
         if (!open && !save.isPending) onClose();
       }}
     >
-      {extras.isPending && <p role="status">Cargando extras…</p>}
-      {extras.isError && <Notice error>No se pudieron consultar los extras.</Notice>}
-      {extras.data?.length === 0 && <p>Aún no hay extras en el catálogo.</p>}
       {!editing && (
         <div className="form-stack">
+          {extras.isPending && <p role="status">Cargando extras…</p>}
+          {extras.isError && <Notice error>No se pudieron consultar los extras.</Notice>}
+          {extras.data?.length === 0 && <p>Aún no hay extras en el catálogo.</p>}
           {extras.data?.map((extra) => (
-            <div className="section-bar" key={extra.id}>
+            <div className="catalog-option-row" key={extra.id}>
               <div>
                 <strong>{extra.name}</strong>
                 <p>
