@@ -2,7 +2,6 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   ArrowUpRight,
-  Bell,
   CalendarDays,
   ChevronDown,
   House,
@@ -148,14 +147,8 @@ export function PublicLayout() {
                     <Link to="/mi-espacio">
                       <UserRound size={17} /> Mi perfil
                     </Link>
-                    <Link to="/mi-espacio#mascotas">
-                      <PawPrint size={17} /> Mis mascotas
-                    </Link>
                     <Link to="/reservar">
                       <CalendarDays size={17} /> Mis citas
-                    </Link>
-                    <Link to="/mi-espacio#recordatorios">
-                      <Bell size={17} /> Recordatorios
                     </Link>
                   </nav>
                   <div className="public-account-bottom">

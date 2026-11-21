@@ -116,12 +116,13 @@ test('registra, cierra sesión y vuelve a entrar sin verificar el correo', async
     '/mi-espacio',
   );
   await expect(accountLinks.getByRole('link', { name: 'Mis citas' })).toBeVisible();
+  await expect(accountLinks.getByRole('link')).toHaveCount(2);
   await page.keyboard.press('Escape');
   await expect(accountMenu).toBeFocused();
   await expect(accountLinks).toBeHidden();
   await accountMenu.click();
-  await accountLinks.getByRole('link', { name: 'Recordatorios' }).click();
-  await expect(page).toHaveURL(/\/mi-espacio#recordatorios$/);
+  await accountLinks.getByRole('link', { name: 'Mi perfil' }).click();
+  await expect(page).toHaveURL(/\/mi-espacio$/);
   await expect(accountLinks).toBeHidden();
   await page.getByLabel('Teléfono para recordatorios').fill('600 123 456');
   await page.getByLabel(/acepto recibir recordatorios/).check();
