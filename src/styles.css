@@ -2453,6 +2453,74 @@ td > small {
 .management-stack .catalog-card > .button {
   margin-top: auto;
 }
+.client-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.client-card-heading svg {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+  border-radius: 10px;
+  background: #edf1e9;
+  color: var(--green-dark);
+}
+.client-card-contact p {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 6px 0;
+}
+.client-card-contact svg {
+  flex: 0 0 15px;
+  height: 15px;
+  align-self: start;
+  margin-top: 4px;
+}
+.client-card-contact small {
+  display: block;
+  color: var(--muted);
+}
+.client-card-status {
+  padding-block: 10px;
+  border-top: 1px solid var(--line);
+}
+.client-card-status .badge {
+  white-space: normal;
+}
+.client-validation {
+  border-inline-start: 4px solid var(--green);
+}
+.management-profile-form {
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.management-profile-form > .button {
+  justify-self: start;
+}
+.pet-visit-list {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+.pet-visit-list > li {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--cream);
+  overflow-wrap: anywhere;
+}
+.pet-visit-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 .catalog-heading-actions,
 .catalog-extras-help,
 .catalog-option-row {

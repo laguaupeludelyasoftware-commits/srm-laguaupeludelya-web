@@ -46,12 +46,12 @@ function ProfileForm<T>({
     }
   }
   return (
-    <section className="panel settings-panel">
+    <section className="panel settings-panel management-profile">
       <h2>{title}</h2>
       {profile.isPending && <p role="status">Cargando ficha…</p>}
       {profile.isError && <Notice error>No se pudo cargar la ficha.</Notice>}
       {profile.data && (
-        <form className="form-stack" onSubmit={save}>
+        <form className="form-stack management-profile-form" onSubmit={save}>
           {fields(profile.data)}
           <Button type="submit" disabled={saving}>
             Guardar ficha
@@ -175,10 +175,15 @@ export function ManagementPetProfile({ path }: { path: string }) {
         {history.isError && <Notice error>No se pudo cargar el historial.</Notice>}
         {history.data?.length === 0 && <p>Esta mascota aún no tiene citas anteriores.</p>}
         {history.data?.length ? (
-          <ul>
+          <ul className="pet-visit-list">
             {history.data.map((visit) => (
               <li key={visit.id}>
-                <strong>{visit.serviceName}</strong> · {historyLabels[visit.status] ?? visit.status}
+                <div className="pet-visit-heading">
+                  <strong>{visit.serviceName}</strong>
+                  <span className={`badge ${visit.status === 'ATTENDED' ? 'badge-attended' : ''}`}>
+                    {historyLabels[visit.status] ?? visit.status}
+                  </span>
+                </div>
                 <p>
                   {visit.startsAt.slice(0, 10).split('-').reverse().join('/')} ·{' '}
                   {visit.startsAt.slice(11, 16)} · {visit.duration} min ·{' '}
