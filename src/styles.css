@@ -699,10 +699,41 @@ legend {
   margin-top: 12px;
   color: #7a806e;
 }
+#servicios {
+  --service-gap: 22px;
+}
 .service-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 22px;
+  gap: var(--service-gap);
+}
+.service-disclosure {
+  position: relative;
+  margin-top: var(--service-gap);
+}
+.service-disclosure-action {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--service-gap);
+}
+.service-disclosure.is-collapsed .service-disclosure-action {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 1;
+  margin: 0;
+}
+.service-disclosure.is-collapsed .service-disclosure-content {
+  display: grid;
+  grid-template-rows: minmax(0, 0.5fr);
+  overflow: hidden;
+  mask-image: linear-gradient(#000 15%, transparent);
+}
+.service-disclosure.is-collapsed .service-grid-more {
+  min-height: 0;
+}
+.service-disclosure.is-collapsed .service-card:nth-child(n + 4) {
+  display: none;
 }
 .service-card {
   border: 1px solid #e3e2d7;
@@ -713,10 +744,10 @@ legend {
     transform 0.25s,
     border-color 0.25s;
 }
-.service-card:nth-child(2) {
+.service-grid:not(.service-grid-more) .service-card:nth-child(2) {
   background: #f0eae1;
 }
-.service-card:nth-child(3) {
+.service-grid:not(.service-grid-more) .service-card:nth-child(3) {
   background: #edf0e6;
 }
 .service-card:hover {
@@ -739,7 +770,7 @@ legend {
   background: #e8e7d9;
   color: #6a775d;
 }
-.service-card:nth-child(2) .service-icon {
+.service-grid:not(.service-grid-more) .service-card:nth-child(2) .service-icon {
   background: #e7dccf;
   color: #8f785f;
 }
@@ -3152,8 +3183,8 @@ td > small {
   .section-heading > p {
     font-size: 0.72rem;
   }
-  .service-grid {
-    gap: 13px;
+  #servicios {
+    --service-gap: 13px;
   }
   .service-card {
     padding: 20px 16px;
@@ -3481,9 +3512,14 @@ td > small {
   h2 {
     font-size: 2rem;
   }
+  #servicios {
+    --service-gap: 16px;
+  }
   .service-grid {
     grid-template-columns: 1fr;
-    gap: 16px;
+  }
+  .service-disclosure.is-collapsed .service-card:nth-child(n + 2) {
+    display: none;
   }
   .service-card {
     padding: 25px;

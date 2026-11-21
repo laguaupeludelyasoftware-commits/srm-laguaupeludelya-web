@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import {
@@ -6,6 +7,8 @@ import {
   ArrowUpRight,
   Bath,
   Cat,
+  ChevronDown,
+  ChevronUp,
   Heart,
   Leaf,
   PawPrint,
@@ -25,7 +28,38 @@ export function LandingPage() {
   const contact = business.data?.contact;
   const whatsapp = whatsappNumber(contact?.phone);
   const services = business.data?.services ?? [];
+  const [showAllServices, setShowAllServices] = useState(false);
   const icons = [Bath, Scissors, Sparkles];
+  const visibleCount = 3;
+
+  function renderService(service: (typeof services)[number], index: number) {
+    const Icon = icons[index % icons.length];
+    return (
+      <article className="service-card" key={service.id}>
+        <div className="service-card-top">
+          <span className="service-icon">
+            <Icon size={28} strokeWidth={1.4} />
+          </span>
+          <span className="service-index">{String(index + 1).padStart(2, '0')}</span>
+        </div>
+        <h3>{service.name}</h3>
+        <p>{service.description}</p>
+        <div className="service-card-bottom">
+          <span>
+            {service.duration} min · <strong>desde {euros(service.price)}</strong>
+          </span>
+          <Link
+            to={`/reservar?${new URLSearchParams({ servicio: service.id })}`}
+            aria-label={`Reservar ${service.name}`}
+            className="round-link"
+          >
+            <ArrowUpRight size={20} />
+          </Link>
+        </div>
+      </article>
+    );
+  }
+
   return (
     <>
       <section className="hero container">
@@ -141,34 +175,39 @@ export function LandingPage() {
           {business.isSuccess && services.length === 0 && (
             <p role="status">Aún no hay servicios publicados.</p>
           )}
-          {services.map((service, index) => {
-            const Icon = icons[index % icons.length];
-            return (
-              <article className="service-card" key={service.id}>
-                <div className="service-card-top">
-                  <span className="service-icon">
-                    <Icon size={28} strokeWidth={1.4} />
-                  </span>
-                  <span className="service-index">0{index + 1}</span>
-                </div>
-                <h3>{service.name}</h3>
-                <p>{service.description}</p>
-                <div className="service-card-bottom">
-                  <span>
-                    {service.duration} min · <strong>desde {euros(service.price)}</strong>
-                  </span>
-                  <Link
-                    to={`/reservar?${new URLSearchParams({ servicio: service.id })}`}
-                    aria-label={`Reservar ${service.name}`}
-                    className="round-link"
-                  >
-                    <ArrowUpRight size={20} />
-                  </Link>
-                </div>
-              </article>
-            );
-          })}
+          {services.slice(0, visibleCount).map(renderService)}
         </div>
+        {services.length > visibleCount && (
+          <div className={`service-disclosure${showAllServices ? '' : ' is-collapsed'}`}>
+            <div className="service-disclosure-action">
+              <Button
+                type="button"
+                aria-expanded={showAllServices}
+                aria-controls="servicios-adicionales"
+                onClick={() => setShowAllServices((open) => !open)}
+              >
+                {showAllServices ? 'Mostrar menos' : 'Mostrar más servicios'}
+                {showAllServices ? (
+                  <ChevronUp size={17} aria-hidden="true" />
+                ) : (
+                  <ChevronDown size={17} aria-hidden="true" />
+                )}
+              </Button>
+            </div>
+            <div
+              className="service-disclosure-content"
+              id="servicios-adicionales"
+              aria-hidden={!showAllServices}
+              inert={!showAllServices}
+            >
+              <div className="service-grid service-grid-more">
+                {services
+                  .slice(visibleCount)
+                  .map((service, index) => renderService(service, index + visibleCount))}
+              </div>
+            </div>
+          </div>
+        )}
         <p className="section-footnote">
           El cuidado se adapta a su especie, tamaño y manto. El importe final se valorará según sus
           necesidades.

@@ -86,3 +86,45 @@ test('distingue un catálogo vacío de una API no disponible', async ({ page }) 
   await expect(page.getByText('No se pudieron cargar los servicios.')).toBeVisible();
   await expect(page.getByText('Aún no hay servicios publicados.')).toHaveCount(0);
 });
+
+test('muestra tres servicios y adelanta el resto hasta que se amplía el catálogo', async ({
+  page,
+}) => {
+  const services = Array.from({ length: 7 }, (_, index) => ({
+    id: `servicio-${index + 1}`,
+    name: `Servicio ${index + 1}`,
+    description: 'Lavado y secado',
+    price: 25,
+    duration: 45,
+    species: ['Perro'],
+  }));
+  await page.route('**/api/public/business', (route) =>
+    route.fulfill({ json: { contact: null, services } }),
+  );
+  await page.goto('/');
+  const toggle = page.getByRole('button', { name: 'Mostrar más servicios' });
+  const section = page.locator('#servicios');
+  const preview = page.locator('#servicios-adicionales');
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(section.getByRole('article')).toHaveCount(3);
+  const mobile = await page.evaluate(() => matchMedia('(max-width: 580px)').matches);
+  await expect(preview.locator('article:visible')).toHaveCount(mobile ? 1 : 3);
+  const previewRatio = await preview.evaluate(
+    (element) =>
+      element.getBoundingClientRect().height /
+      element.querySelector('article')!.getBoundingClientRect().height,
+  );
+  expect(previewRatio).toBeCloseTo(0.5, 1);
+
+  await toggle.click();
+  const collapse = page.getByRole('button', { name: 'Mostrar menos' });
+  await expect(collapse).toHaveAttribute('aria-expanded', 'true');
+  await expect(section.getByRole('article')).toHaveCount(7);
+  await expect(section.getByRole('link', { name: 'Reservar Servicio 7' })).toHaveAttribute(
+    'href',
+    '/reservar?servicio=servicio-7',
+  );
+  await collapse.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(section.getByRole('article')).toHaveCount(3);
+});
