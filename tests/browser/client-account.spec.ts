@@ -7,7 +7,12 @@ test('añade la primera mascota y reserva un hueco libre con el correo pendiente
   await page.addInitScript(() => sessionStorage.setItem('guaupelu-client-session', 'client-test'));
   await page.route('**/api/auth/client/me', (route) =>
     route.fulfill({
-      json: { name: 'Clara', email: 'clara@example.test', emailVerified: false },
+      json: {
+        name: 'Clara',
+        email: 'clara@example.test',
+        emailVerified: false,
+        inPersonValidated: false,
+      },
     }),
   );
   const pet = { id: 'pet', name: 'Milo', species: 'Perro', weight: 6, coat: 'No lo sé' };
@@ -77,6 +82,10 @@ test('añade la primera mascota y reserva un hueco libre con el correo pendiente
     });
   });
   await page.goto('/reservar?servicio=bath');
+  await expect(
+    page.getByText(/Por seguridad, solo puedes tener una cita futura confirmada/),
+  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Mis citas' })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Añade tu primera mascota' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Confirmar cita' })).toHaveCount(0);
   await page.getByLabel('¿Cómo se llama?').fill('Milo');
@@ -91,7 +100,17 @@ test('añade la primera mascota y reserva un hueco libre con el correo pendiente
   await page.getByRole('radio', { name: '10:00' }).check();
   await page.getByRole('button', { name: 'Confirmar cita' }).click();
   await expect(page.getByText('Cita confirmada.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Mis citas' })).toBeVisible();
+  await expect(page.getByLabel('Mascota', { exact: true })).toHaveCount(0);
   await page.reload();
+  await expect(page.getByRole('heading', { name: 'Milo · Baño' })).toBeVisible();
+  const bookingNav = page.getByRole('navigation', { name: 'Reservas' });
+  await bookingNav.getByRole('link', { name: 'Solicitar cita' }).click();
+  await expect(
+    page.getByText('Ya tienes una cita futura. Puedes consultarla en la sección Mis citas.'),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Confirmar cita' })).toHaveCount(0);
+  await bookingNav.getByRole('link', { name: 'Mis citas' }).click();
   await expect(page.getByRole('heading', { name: 'Milo · Baño' })).toBeVisible();
 });
 
@@ -140,7 +159,10 @@ test('registra, cierra sesión y vuelve a entrar sin verificar el correo', async
     'href',
     '/mi-espacio',
   );
-  await expect(accountLinks.getByRole('link', { name: 'Mis citas' })).toBeVisible();
+  await expect(accountLinks.getByRole('link', { name: 'Mis citas' })).toHaveAttribute(
+    'href',
+    '/reservar?seccion=citas',
+  );
   await expect(accountLinks.getByRole('link')).toHaveCount(2);
   await page.keyboard.press('Escape');
   await expect(accountMenu).toBeFocused();

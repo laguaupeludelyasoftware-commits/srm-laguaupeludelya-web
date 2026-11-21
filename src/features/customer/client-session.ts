@@ -19,6 +19,7 @@ interface ClientProfile {
   name: string;
   email: string;
   emailVerified: boolean;
+  inPersonValidated: boolean;
 }
 
 /** Comprueba la sesión y lee los datos de la cuenta autenticada. */

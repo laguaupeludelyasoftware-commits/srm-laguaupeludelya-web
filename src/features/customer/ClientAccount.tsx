@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Button, Field, Notice } from '../../components/ui';
 import { getClientToken, sessionKey, useClientLogout, useClientProfile } from './client-session';
 import { ClientPets } from './ClientPets';
@@ -161,7 +161,7 @@ export function ClientAccount() {
             <ReminderPreference token={token} />
           </div>
           <Button asChild>
-            <Link to="/reservar">Reservar o consultar mis citas</Link>
+            <Link to="/reservar?seccion=citas">Consultar mis citas</Link>
           </Button>
         </>
       )}
@@ -171,7 +171,6 @@ export function ClientAccount() {
 
 /** Protege el acceso público a reservas y conserva el servicio elegido durante el registro. */
 export function ClientBooking() {
-  const [params] = useSearchParams();
   const location = useLocation();
   const token = getClientToken();
   const profile = useClientProfile(token);
@@ -194,7 +193,7 @@ export function ClientBooking() {
         </>
       )}
       {profile.isSuccess && profile.data && (
-        <OnlineBooking token={token} initialService={params.get('servicio') ?? ''} />
+        <OnlineBooking token={token} inPersonValidated={profile.data.inPersonValidated} />
       )}
     </section>
   );

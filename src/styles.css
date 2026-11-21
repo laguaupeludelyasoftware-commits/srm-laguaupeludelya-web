@@ -420,6 +420,12 @@ legend {
 .client-account-anchor {
   scroll-margin-top: 112px;
 }
+.online-booking-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
 .online-booking-step,
 .online-calendar {
   display: grid;

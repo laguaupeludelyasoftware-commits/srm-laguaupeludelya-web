@@ -41,7 +41,18 @@ test('pide una cuenta para reservar y conserva el servicio elegido al registrars
       json: { name: 'Clara Prueba', email: 'clara@example.com', emailVerified: false },
     }),
   );
-  await page.route('**/api/auth/client/pets', (route) => route.fulfill({ json: [] }));
+  const pet = { id: 'milo', name: 'Milo', species: 'Perro', weight: 6 };
+  let hasPet = false;
+  await page.route('**/api/auth/client/pets', (route) => {
+    if (route.request().method() === 'POST') {
+      hasPet = true;
+      return route.fulfill({ status: 201, json: pet });
+    }
+    return route.fulfill({ json: hasPet ? [pet] : [] });
+  });
+  await page.route('**/api/auth/client/appointments/quote?*', (route) =>
+    route.fulfill({ json: { price: 24.5, duration: 45, availableExtras: [] } }),
+  );
   await page.route('**/api/auth/client/appointments', (route) => route.fulfill({ json: [] }));
   await page.getByRole('link', { name: 'Crear una cuenta' }).click();
   await page.getByLabel('Tu nombre').fill('Clara Prueba');
@@ -49,6 +60,9 @@ test('pide una cuenta para reservar y conserva el servicio elegido al registrars
   await page.getByLabel('Contraseña').fill('client-test-password');
   await page.getByRole('button', { name: 'Crear cuenta' }).click();
   await expect(page).toHaveURL(/\/reservar\?servicio=bano-publicado$/);
+  await page.getByLabel('¿Cómo se llama?').fill('Milo');
+  await page.getByLabel('Peso aproximado (kg)').fill('6');
+  await page.getByRole('button', { name: 'Guardar mascota y continuar' }).click();
   await expect(page.getByLabel('Servicio')).toHaveValue('bano-publicado');
   await expect(page.getByRole('button', { name: 'Confirmar cita' })).toBeDisabled();
 });

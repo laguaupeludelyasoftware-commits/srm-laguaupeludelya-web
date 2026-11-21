@@ -147,7 +147,7 @@ export function PublicLayout() {
                     <Link to="/mi-espacio">
                       <UserRound size={17} /> Mi perfil
                     </Link>
-                    <Link to="/reservar">
+                    <Link to="/reservar?seccion=citas">
                       <CalendarDays size={17} /> Mis citas
                     </Link>
                   </nav>
