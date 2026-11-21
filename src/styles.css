@@ -2521,17 +2521,12 @@ td > small {
   flex-wrap: wrap;
   gap: 8px;
 }
-.catalog-heading-actions,
 .catalog-extras-help,
 .catalog-option-row {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-}
-.catalog-heading-actions {
-  flex-shrink: 0;
-  max-width: 100%;
 }
 .catalog-extras-help,
 .catalog-option-row {
@@ -2548,6 +2543,25 @@ td > small {
 .catalog-card-actions {
   display: grid;
   gap: 10px;
+}
+.catalog-extra-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.catalog-selected-extras {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  margin: 12px 0 0;
+  list-style: none;
+}
+.catalog-selected-extras > li {
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow-wrap: anywhere;
 }
 .catalog-card {
   padding: 25px;
@@ -2596,6 +2610,53 @@ td > small {
   gap: 5px;
   font-size: 0.68rem;
   color: #909b7f;
+}
+.service-catalog-grid {
+  grid-auto-rows: 1fr;
+  gap: 14px;
+}
+.service-catalog-grid .catalog-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px;
+}
+.service-catalog-grid .service-icon {
+  width: 34px;
+  height: 34px;
+}
+.service-catalog-grid .catalog-card > h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.service-catalog-grid .catalog-card > p {
+  display: -webkit-box;
+  block-size: 2lh;
+  min-height: 0;
+  margin: 0;
+  line-height: 1.4;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.service-catalog-grid .species-tags {
+  margin: 0;
+}
+.service-catalog-grid .catalog-price {
+  padding-top: 8px;
+  margin: auto 0 0;
+}
+.service-catalog-grid .catalog-price > strong {
+  font-size: 1.25rem;
+}
+.service-catalog-grid .catalog-card-actions {
+  gap: 6px;
 }
 .info-strip {
   display: flex;

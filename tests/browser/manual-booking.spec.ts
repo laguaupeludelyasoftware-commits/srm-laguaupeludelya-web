@@ -4,6 +4,7 @@ test('crea un extra de catálogo y lo asigna al crear un servicio', async ({ pag
   await page.addInitScript(() => sessionStorage.setItem('guaupelu-owner-session', 'owner-test'));
   await page.route('**/api/management/session', (route) => route.fulfill({ status: 204 }));
   const extra = { id: 'brush', name: 'Cepillado', price: 5, duration: 15, active: true };
+  const inactiveExtra = { id: 'balm', name: 'Bálsamo', price: 4, duration: 5, active: false };
   let savedExtra = false;
   await page.route('**/api/management/extras', (route) => {
     if (route.request().method() === 'POST') {
@@ -16,7 +17,7 @@ test('crea un extra de catálogo y lo asigna al crear un servicio', async ({ pag
       savedExtra = true;
       return route.fulfill({ status: 201, json: extra });
     }
-    return route.fulfill({ json: savedExtra ? [extra] : [] });
+    return route.fulfill({ json: savedExtra ? [extra, inactiveExtra] : [] });
   });
   const service = {
     name: 'Baño de prueba',
@@ -41,11 +42,10 @@ test('crea un extra de catálogo y lo asigna al crear un servicio', async ({ pag
   await expect(page.getByText(/Crea primero los extras/)).toBeVisible();
   const newService = page.getByRole('button', { name: 'Nuevo servicio' });
   const newExtra = page.getByRole('button', { name: 'Nuevo extra' });
-  const servicePosition = await newService.boundingBox();
-  const extraPosition = await newExtra.boundingBox();
-  if (!servicePosition || !extraPosition) throw new Error('Faltan las acciones del catálogo.');
-  expect(Math.abs(servicePosition.y - extraPosition.y)).toBeLessThan(2);
-  expect(extraPosition.x - servicePosition.x - servicePosition.width).toBeGreaterThanOrEqual(8);
+  await expect(newService).toBeVisible();
+  await expect(newExtra).toHaveCount(0);
+  await page.getByRole('button', { name: 'Gestionar extras' }).click();
+  await expect(page.getByRole('heading', { name: 'Catálogo de extras' })).toBeVisible();
   await newExtra.click();
   await expect(page.getByRole('heading', { name: 'Nuevo extra' })).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -56,10 +56,19 @@ test('crea un extra de catálogo y lo asigna al crear un servicio', async ({ pag
   await page.getByLabel('Publicar extra').check();
   await page.getByRole('button', { name: 'Guardar extra' }).click();
   await expect(page.getByText(extra.name, { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Volver a servicios' }).click();
-  await page.getByRole('button', { name: 'Gestionar extras' }).click();
   await expect(page.getByRole('heading', { name: 'Catálogo de extras' })).toBeVisible();
-  await expect(page.getByText(extra.name, { exact: true })).toBeVisible();
+  const extraAction = await newExtra.boundingBox();
+  const firstRow = await page.locator('.catalog-option-row').first().boundingBox();
+  if (!extraAction || !firstRow) throw new Error('Falta la acción o el listado de extras.');
+  expect(extraAction.y + extraAction.height).toBeLessThan(firstRow.y);
+  for (const [name, status] of [
+    [extra.name, 'Publicado'],
+    [inactiveExtra.name, 'Sin publicar'],
+  ]) {
+    const row = page.locator('.catalog-option-row').filter({ hasText: name });
+    await expect(row.getByRole('button', { name: 'Editar' })).toBeVisible();
+    await expect(row.getByText(status, { exact: true })).toBeVisible();
+  }
   await page.getByRole('button', { name: 'Volver a servicios' }).click();
 
   await page.getByRole('button', { name: 'Nuevo servicio' }).click();
@@ -68,12 +77,61 @@ test('crea un extra de catálogo y lo asigna al crear un servicio', async ({ pag
   await page.getByLabel('Nombre del servicio').fill(service.name);
   await page.getByLabel('Precio base').fill(String(service.price));
   await page.getByLabel('Duración (minutos)').fill(String(service.duration));
-  await page.getByRole('checkbox', { name: /Cepillado/ }).check();
+  const picker = page.getByRole('combobox', { name: 'Añadir extra' });
+  const selected = page.getByRole('list', { name: 'Extras añadidos' });
+  await picker.click();
+  await page.getByRole('option', { name: /Cepillado/ }).click();
+  await picker.click();
+  await expect(page.getByRole('option', { name: /Cepillado/ })).toHaveCount(0);
+  await page.getByRole('option', { name: /Bálsamo.*Sin publicar/ }).click();
+  await expect(selected.getByRole('listitem')).toHaveCount(2);
+  await selected.getByRole('button', { name: 'Quitar Bálsamo' }).click();
   await page.getByRole('button', { name: 'Guardar servicio' }).click();
   await expect(page.getByText('Servicio guardado.')).toBeVisible();
 
   await page.getByRole('button', { name: 'Editar servicio' }).click();
-  await expect(page.getByRole('checkbox', { name: /Cepillado/ })).toBeChecked();
+  await expect(selected.getByRole('listitem')).toHaveCount(1);
+  await expect(selected.getByText(extra.name, { exact: true })).toBeVisible();
+});
+
+test('mantiene las tarjetas de servicios a la misma altura con textos largos', async ({ page }) => {
+  await page.addInitScript(() => sessionStorage.setItem('guaupelu-owner-session', 'owner-test'));
+  await page.route('**/api/management/session', (route) => route.fulfill({ status: 204 }));
+  const service = {
+    name: 'Baño',
+    description: 'Baño y secado.',
+    price: 25,
+    duration: 45,
+    species: ['Perro'],
+    active: true,
+  };
+  const longName = 'Baño completo con cepillado, secado y arreglo del manto';
+  await page.route('**/api/management/services', (route) =>
+    route.fulfill({
+      json: [
+        { ...service, id: 'bath' },
+        { ...service, id: 'cut', name: 'Corte' },
+        { ...service, id: 'dry', name: 'Secado', description: '' },
+        {
+          ...service,
+          id: 'full',
+          name: longName,
+          description: 'Servicio de peluquería con cuidado adaptado al manto. '.repeat(8),
+          species: ['Perro', 'Gato'],
+        },
+      ],
+    }),
+  );
+  await page.goto('/gestion/servicios');
+  const cards = page.getByRole('article');
+  await expect(cards).toHaveCount(4);
+  const heights = await cards.evaluateAll((items) =>
+    items.map((item) => item.getBoundingClientRect().height),
+  );
+  expect(Math.max(...heights) - Math.min(...heights)).toBeLessThan(1);
+  const title = page.getByRole('heading', { name: longName });
+  await expect(title).toHaveAttribute('title', longName);
+  expect(await title.evaluate((element) => element.scrollWidth > element.clientWidth)).toBe(true);
 });
 
 test('carga un ejemplo editable de ajuste por mascota y lo guarda desactivado', async ({

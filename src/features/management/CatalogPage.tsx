@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Clock3, Pencil, Plus, Scissors } from 'lucide-react';
+import { Clock3, Pencil, Plus, Scissors, X } from 'lucide-react';
 import { PageHeading } from '../../components/layout';
+import { SelectField } from '../../components/SelectField';
 import { Button, Field, Notice } from '../../components/ui';
 import type { Service, Species } from '../../domain/models';
 import { euros } from '../../domain/rules';
@@ -30,13 +31,29 @@ export function CatalogPage() {
     },
   });
   const [editing, setEditing] = useState<ManagedService | 'new' | null>(null);
-  const [extrasView, setExtrasView] = useState<'list' | 'new'>();
+  const [extraIds, setExtraIds] = useState<string[]>([]);
+  const [showExtras, setShowExtras] = useState(false);
   const [variantService, setVariantService] = useState<Service | null>(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const current = editing && editing !== 'new' ? editing : null;
   const extras = useCatalogExtras(!!editing);
+  const catalogExtras = extras.data ?? [];
+  const extraOptions = catalogExtras
+    .filter((extra) => !extraIds.includes(extra.id))
+    .map((extra) => ({
+      value: extra.id,
+      label: `${extra.name} · ${euros(extra.price)} · +${extra.duration} min${extra.active ? '' : ' · Sin publicar'}`,
+    }));
+  const selectedExtras = catalogExtras.filter((extra) => extraIds.includes(extra.id));
+
+  function openService(service: ManagedService | 'new') {
+    setError('');
+    setExtraIds(service === 'new' ? [] : (service.extraIds ?? []));
+    setEditing(service);
+  }
+
   /** Guarda el servicio y actualiza las consultas del panel y de la web. */
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -57,7 +74,7 @@ export function CatalogPage() {
       duration,
       species,
       active: data.get('active') === 'on',
-      extraIds: data.getAll('extraIds').map(String),
+      extraIds,
     };
     setSaving(true);
     setError('');
@@ -95,13 +112,8 @@ export function CatalogPage() {
       setSaving(false);
     }
   }
-  if (extrasView) {
-    return (
-      <CatalogExtras
-        startCreating={extrasView === 'new'}
-        onClose={() => setExtrasView(undefined)}
-      />
-    );
+  if (showExtras) {
+    return <CatalogExtras onClose={() => setShowExtras(false)} />;
   }
   if (variantService) {
     return <CatalogVariants service={variantService} onClose={() => setVariantService(null)} />;
@@ -187,18 +199,42 @@ export function CatalogPage() {
               </Notice>
             )}
             {extras.data?.length === 0 && <p>Puedes crear extras desde «Gestionar extras».</p>}
-            {extras.data?.map((extra) => (
-              <label className="checkbox-line" key={extra.id}>
-                <input
-                  type="checkbox"
-                  name="extraIds"
-                  value={extra.id}
-                  defaultChecked={current?.extraIds?.includes(extra.id)}
+            {catalogExtras.length > 0 && (
+              <Field label="Añadir extra" htmlFor="service-extra">
+                <SelectField
+                  id="service-extra"
+                  value=""
+                  placeholder={extraOptions.length ? 'Elige un extra' : 'Todos los extras añadidos'}
+                  options={extraOptions}
+                  disabled={saving}
+                  onValueChange={(id) => setExtraIds((ids) => [...ids, id])}
                 />
-                {extra.name} · {euros(extra.price)} · +{extra.duration} min
-                {!extra.active && ' · Desactivado'}
-              </label>
-            ))}
+              </Field>
+            )}
+            {selectedExtras.length > 0 && (
+              <ul className="catalog-selected-extras" aria-label="Extras añadidos">
+                {selectedExtras.map((extra) => (
+                  <li className="catalog-option-row" key={extra.id}>
+                    <div>
+                      <strong>{extra.name}</strong>
+                      <p>
+                        {euros(extra.price)} · +{extra.duration} min
+                        {!extra.active && ' · Sin publicar'}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      aria-label={`Quitar ${extra.name}`}
+                      disabled={saving}
+                      onClick={() => setExtraIds((ids) => ids.filter((id) => id !== extra.id))}
+                    >
+                      <X size={16} aria-hidden="true" />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </fieldset>
           <label className="checkbox-line">
             <input type="checkbox" name="active" defaultChecked={current?.active ?? false} />{' '}
@@ -219,26 +255,16 @@ export function CatalogPage() {
         title="Servicios con tu sello."
         description="Lo que ofreces y cómo lo cuentas, en un mismo lugar."
         action={
-          <div className="catalog-heading-actions">
-            <Button
-              onClick={() => {
-                setError('');
-                setEditing('new');
-              }}
-            >
-              <Plus size={17} /> Nuevo servicio
-            </Button>
-            <Button variant="outline" onClick={() => setExtrasView('new')}>
-              <Plus size={17} /> Nuevo extra
-            </Button>
-          </div>
+          <Button onClick={() => openService('new')}>
+            <Plus size={17} /> Nuevo servicio
+          </Button>
         }
       />
       <div className="catalog-extras-help">
         <p className="muted">
           Crea primero los extras. Después podrás añadirlos al crear o editar un servicio.
         </p>
-        <Button variant="outline" onClick={() => setExtrasView('list')}>
+        <Button variant="outline" onClick={() => setShowExtras(true)}>
           Gestionar extras
         </Button>
       </div>
@@ -248,19 +274,21 @@ export function CatalogPage() {
       {catalog.data?.length === 0 && (
         <p>Aún no hay servicios. Añade el primero para preparar el catálogo.</p>
       )}
-      <div className="catalog-grid">
+      <div className="catalog-grid service-catalog-grid">
         {catalog.data?.map((s) => (
           <article className="panel catalog-card" key={s.id}>
             <div className="section-bar">
               <span className="service-icon">
-                <Scissors size={23} strokeWidth={1.3} />
+                <Scissors size={20} strokeWidth={1.3} aria-hidden="true" />
               </span>
               <span className={`badge ${s.active ? 'badge-attended' : 'badge-cancelled'}`}>
                 {s.active ? 'Publicado' : 'Desactivado'}
               </span>
             </div>
-            <h2>{s.name}</h2>
-            <p className="muted">{s.description}</p>
+            <h2 title={s.name}>{s.name}</h2>
+            <p className="muted" title={s.description}>
+              {s.description}
+            </p>
             <div className="species-tags">
               {s.species.map((sp) => (
                 <span className="soft-tag" key={sp}>
@@ -278,13 +306,7 @@ export function CatalogPage() {
               </span>
             </div>
             <div className="catalog-card-actions">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setError('');
-                  setEditing(s);
-                }}
-              >
+              <Button variant="outline" onClick={() => openService(s)}>
                 <Pencil size={15} /> Editar servicio
               </Button>
               <Button variant="outline" onClick={() => setVariantService(s)}>

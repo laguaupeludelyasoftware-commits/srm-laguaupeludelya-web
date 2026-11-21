@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Plus } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { Button, Field, Notice } from '../../components/ui';
 import { CatalogWorkspace } from './CatalogWorkspace';
@@ -17,17 +18,9 @@ export function useCatalogExtras(enabled = true) {
   });
 }
 
-export function CatalogExtras({
-  startCreating,
-  onClose,
-}: {
-  startCreating: boolean;
-  onClose: () => void;
-}) {
+export function CatalogExtras({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
-  const [editing, setEditing] = useState<Extra | 'new' | undefined>(
-    startCreating ? 'new' : undefined,
-  );
+  const [editing, setEditing] = useState<Extra | 'new'>();
   const current = typeof editing === 'object' ? editing : undefined;
   const extras = useCatalogExtras();
   const save = useMutation({
@@ -67,6 +60,17 @@ export function CatalogExtras({
     >
       {!editing && (
         <div className="form-stack">
+          <div className="catalog-extra-actions">
+            <Button
+              type="button"
+              onClick={() => {
+                save.reset();
+                setEditing('new');
+              }}
+            >
+              <Plus size={17} aria-hidden="true" /> Nuevo extra
+            </Button>
+          </div>
           {extras.isPending && <p role="status">Cargando extras…</p>}
           {extras.isError && <Notice error>No se pudieron consultar los extras.</Notice>}
           {extras.data?.length === 0 && <p>Aún no hay extras en el catálogo.</p>}
@@ -75,31 +79,26 @@ export function CatalogExtras({
               <div>
                 <strong>{extra.name}</strong>
                 <p>
-                  {euros(extra.price)} · +{extra.duration} min ·{' '}
-                  {extra.active ? 'Publicado' : 'Desactivado'}
+                  {euros(extra.price)} · +{extra.duration} min
                 </p>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  save.reset();
-                  setEditing(extra);
-                }}
-              >
-                Editar
-              </Button>
+              <div className="catalog-extra-actions">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    save.reset();
+                    setEditing(extra);
+                  }}
+                >
+                  Editar
+                </Button>
+                <span className={`badge ${extra.active ? 'badge-attended' : 'badge-cancelled'}`}>
+                  {extra.active ? 'Publicado' : 'Sin publicar'}
+                </span>
+              </div>
             </div>
           ))}
-          <Button
-            type="button"
-            onClick={() => {
-              save.reset();
-              setEditing('new');
-            }}
-          >
-            Nuevo extra
-          </Button>
         </div>
       )}
       {editing && (
