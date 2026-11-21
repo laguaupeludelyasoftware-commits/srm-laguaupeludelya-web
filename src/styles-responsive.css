@@ -244,10 +244,6 @@
     text-align: right;
   }
 
-  .hero-actions {
-    gap: 15px;
-  }
-
   .public-nav.open {
     max-height: calc(100dvh - 115px);
     overflow-y: auto;
@@ -346,22 +342,7 @@
     margin-left: 50%;
   }
 
-  .hero-actions .button {
-    width: 100%;
-    font-size: 0.9rem;
-  }
-
-  .hero-actions .text-link {
-    font-size: 0.8rem;
-    min-height: 44px;
-  }
-
-  .hero-note {
-    font-size: 0.72rem;
-  }
-
   .service-card > p,
-  .landing-step p,
   .philosophy-grid p,
   .contact-card p {
     font-size: 0.88rem !important;

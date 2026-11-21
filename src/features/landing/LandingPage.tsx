@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import {
-  ArrowDown,
-  ArrowRight,
   ArrowUpRight,
   Bath,
   Cat,
@@ -21,6 +19,13 @@ import { businessDays, usePublicBusiness } from '../../data/public-business';
 import { euros } from '../../domain/rules';
 
 import { whatsappNumber } from '../../lib/whatsapp';
+
+const carePhrases = [
+  { Icon: PawPrint, text: 'Cuidado con calma' },
+  { Icon: Scissors, text: 'Cada manto, su mimo' },
+  { Icon: Cat, text: 'Perros y gatos' },
+  { Icon: Heart, text: 'Los detalles importan' },
+];
 
 /** Presentación pública con el contacto y catálogo publicados por el negocio. */
 export function LandingPage() {
@@ -89,20 +94,6 @@ export function LandingPage() {
             Su bienestar, nuestro detalle favorito. Un espacio para cuidar su pelaje, respetar su
             ritmo y sacar a pasear su mejor versión.
           </p>
-          <div className="hero-actions">
-            <Button asChild>
-              <Link to="/reservar">
-                Le toca un mimo <ArrowUpRight size={18} />
-              </Link>
-            </Button>
-            <a className="text-link" href="#servicios">
-              Descubre nuestros cuidados <ArrowDown size={15} />
-            </a>
-          </div>
-          <div className="hero-note">
-            <Heart size={17} />
-            <span>Para los que son mucho más que una mascota.</span>
-          </div>
         </motion.div>
         <motion.div
           className="hero-art"
@@ -132,27 +123,16 @@ export function LandingPage() {
         </motion.div>
       </section>
       <div className="care-ribbon">
-        <span>
-          <PawPrint size={17} /> Cuidado con calma
-        </span>
-        <span className="ribbon-star" aria-hidden="true">
-          <Sparkle size={16} />
-        </span>
-        <span>
-          <Scissors size={17} /> Cada manto, su mimo
-        </span>
-        <span className="ribbon-star" aria-hidden="true">
-          <Sparkle size={16} />
-        </span>
-        <span>
-          <Cat size={17} /> Perros y gatos
-        </span>
-        <span className="ribbon-star" aria-hidden="true">
-          <Sparkle size={16} />
-        </span>
-        <span>
-          <Heart size={17} /> Los detalles importan
-        </span>
+        <div className="care-ribbon-line">
+          {carePhrases.map(({ Icon, text }, index) => (
+            <span className="care-ribbon-item" key={text}>
+              {index > 0 && <Sparkle className="ribbon-star" size={16} aria-hidden="true" />}
+              <span className="care-ribbon-phrase">
+                <Icon size={17} aria-hidden="true" /> {text}
+              </span>
+            </span>
+          ))}
+        </div>
       </div>
       <section id="servicios" className="section container">
         <div className="section-heading">
@@ -248,45 +228,6 @@ export function LandingPage() {
               <small>El cariño también está en los detalles.</small>
             </div>
           </div>
-        </div>
-      </section>
-      <section className="section container">
-        <div className="center-heading">
-          <span className="eyebrow">FÁCIL PARA TI, BONITO PARA ÉL</span>
-          <h2>
-            Su próxima visita,
-            <br />
-            <em>a unas patitas de aquí.</em>
-          </h2>
-        </div>
-        <div className="steps-grid">
-          {[
-            {
-              title: 'Nos conocemos',
-              text: 'Crea tu cuenta de cliente con tu correo y contraseña.',
-            },
-            {
-              title: 'Eliges su momento',
-              text: 'Consulta los servicios publicados. La reserva online estará disponible tras habilitar la verificación de correo.',
-            },
-            {
-              title: 'Nos vemos en la pelu',
-              text: 'En la primera visita, Nazaret validará tu cuenta para tus próximas reservas.',
-            },
-          ].map((step, i) => (
-            <div className="landing-step" key={step.title}>
-              <span>0{i + 1}</span>
-              <h3>{step.title}</h3>
-              <p>{step.text}</p>
-            </div>
-          ))}
-        </div>
-        <div className="center-action">
-          <Button asChild>
-            <Link to="/registro">
-              Empezamos por conocernos <ArrowRight size={17} />
-            </Link>
-          </Button>
         </div>
       </section>
       <section id="contacto" className="contact-section container">

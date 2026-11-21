@@ -198,14 +198,6 @@ legend {
   color: #9b4f3d;
   border-color: #e9cfc4;
 }
-.text-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.8rem;
-  font-weight: 500;
-}
-.text-link:hover,
 .inline-link:hover {
   text-decoration: underline;
   text-underline-offset: 5px;
@@ -557,21 +549,6 @@ legend {
   margin-top: 24px;
   color: var(--muted);
 }
-.hero-actions {
-  display: flex;
-  align-items: center;
-  gap: 25px;
-  margin-top: 32px;
-  flex-wrap: wrap;
-}
-.hero-note {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  color: #818471;
-  font-size: 0.66rem;
-  margin-top: 35px;
-}
 .hero-art {
   position: relative;
   min-height: 440px;
@@ -655,19 +632,35 @@ legend {
   color: #8c997c;
 }
 .care-ribbon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(15px, 3.4vw, 55px);
+  --ribbon-gap: clamp(15px, 3.4vw, 55px);
+  --ribbon-line: max(22px, 1.5em);
   padding: 23px 30px;
   border-block: 1px solid #dde0d1;
   background: #eef0e5;
   color: #66735a;
   font-size: 0.75rem;
 }
-.care-ribbon > span {
+.care-ribbon-line {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: start;
+  column-gap: var(--ribbon-gap);
+  block-size: var(--ribbon-line);
+  overflow: clip;
+}
+.care-ribbon-item,
+.care-ribbon-phrase {
   display: flex;
   align-items: center;
+}
+.care-ribbon-item {
+  flex: none;
+  gap: var(--ribbon-gap);
+  min-block-size: var(--ribbon-line);
+  white-space: nowrap;
+}
+.care-ribbon-phrase {
   gap: 12px;
 }
 .ribbon-star {
@@ -917,67 +910,15 @@ legend {
   margin-top: 15px;
   font-size: 0.86rem;
 }
-.steps-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 60px;
-  margin: 50px 20px 32px;
-}
-.landing-step {
-  position: relative;
-  text-align: center;
-}
-.landing-step > span {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 0 auto 21px;
-  border: 1px solid #d7ddca;
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  font-family: var(--serif);
-  font-size: 0.9rem;
-  color: var(--green);
-}
-.landing-step:not(:last-child):after {
-  position: absolute;
-  content: '';
-  top: 23px;
-  left: 65%;
-  width: 90%;
-  height: 1px;
-  background: repeating-linear-gradient(
-    90deg,
-    #d4d9c7,
-    #d4d9c7 5px,
-    transparent 5px,
-    transparent 11px
-  );
-}
-.landing-step h3 {
-  font-family: var(--serif);
-  font-size: 1.14rem;
-  font-weight: 400;
-}
-.landing-step p {
-  font-size: 0.78rem;
-  color: var(--muted);
-  margin: 13px auto 0;
-  max-width: 260px;
-}
-.center-action {
-  text-align: center;
-  margin-top: 35px;
-}
 .contact-section {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
   gap: 65px;
-  background: #e8ecdf;
+  background: #fff;
+  border: 1px solid var(--line);
   border-radius: 20px;
   padding: 55px 60px;
-  margin-bottom: 80px;
+  margin-block: clamp(28px, 5vw, 64px) 80px;
   align-items: center;
 }
 .contact-section h2 {
@@ -2984,12 +2925,6 @@ td > small {
     margin-left: 200px;
     width: 170px;
   }
-  .hero-actions {
-    gap: 18px;
-  }
-  .hero-actions .text-link {
-    font-size: 0.7rem;
-  }
   .hero-art {
     min-height: 340px;
   }
@@ -3125,13 +3060,6 @@ td > small {
     width: 140px;
     margin-left: 160px;
   }
-  .hero-actions {
-    gap: 20px;
-  }
-  .hero-note {
-    font-size: 0.56rem;
-    line-height: 1.7;
-  }
   .hero-art {
     min-height: 300px;
     padding: 10px;
@@ -3165,8 +3093,7 @@ td > small {
     font-size: 0.7rem;
   }
   .care-ribbon {
-    gap: 18px;
-    flex-wrap: wrap;
+    --ribbon-gap: 18px;
     font-size: 0.65rem;
     padding: 20px;
   }
@@ -3228,10 +3155,6 @@ td > small {
   .round-stamp svg {
     width: 17px;
     margin: 4px;
-  }
-  .steps-grid {
-    gap: 30px;
-    margin-inline: 0;
   }
   .contact-section {
     padding: 35px;
@@ -3431,17 +3354,6 @@ td > small {
     margin-left: 180px;
     width: 155px;
   }
-  .hero-actions {
-    gap: 20px;
-    margin-top: 25px;
-  }
-  .hero-actions .text-link {
-    font-size: 0.7rem;
-  }
-  .hero-note {
-    margin-top: 23px;
-    font-size: 0.6rem;
-  }
   .hero-art {
     min-height: 340px;
     max-width: 340px;
@@ -3478,12 +3390,11 @@ td > small {
     width: 40px;
   }
   .care-ribbon {
-    justify-content: space-around;
-    gap: 15px 20px;
+    --ribbon-gap: 20px;
     font-size: 0.6rem;
     padding: 18px;
   }
-  .care-ribbon > span {
+  .care-ribbon-phrase {
     gap: 7px;
   }
   .care-ribbon svg {
@@ -3575,38 +3486,6 @@ td > small {
   }
   .philosophy-sign small {
     max-width: 200px;
-  }
-  .steps-grid {
-    grid-template-columns: 1fr;
-    gap: 26px;
-    margin: 35px 0;
-  }
-  .landing-step {
-    text-align: left;
-    display: grid;
-    grid-template-columns: 44px 1fr;
-    column-gap: 18px;
-    align-items: start;
-  }
-  .landing-step > span {
-    grid-row: 1/3;
-    margin: 0;
-    width: 38px;
-    height: 38px;
-  }
-  .landing-step:after {
-    display: none;
-  }
-  .landing-step h3 {
-    font-size: 1.2rem;
-  }
-  .landing-step p {
-    max-width: none;
-    margin-top: 8px;
-    font-size: 0.77rem;
-  }
-  .center-action {
-    margin-top: 25px;
   }
   .contact-section {
     grid-template-columns: 1fr;

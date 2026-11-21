@@ -1,5 +1,33 @@
 import { expect, test } from '@playwright/test';
 
+test('mantiene el separador de la landing en una sola línea al cambiar el ancho', async ({
+  page,
+}) => {
+  await page.route('**/api/public/business', (route) =>
+    route.fulfill({ json: { contact: null, services: [] } }),
+  );
+  await page.goto('/');
+  await expect(page.locator('.hero a')).toHaveCount(0);
+  await expect(page.getByText('Para los que son mucho más que una mascota.')).toHaveCount(0);
+  const line = page.locator('.care-ribbon-line');
+  await page.evaluate(() => document.fonts.ready);
+
+  async function visiblePhrases() {
+    return line.evaluate((element) => {
+      const { top, bottom } = element.getBoundingClientRect();
+      return Array.from(element.children).filter((item) => {
+        const bounds = item.getBoundingClientRect();
+        return bounds.top >= top && bounds.bottom <= bottom;
+      }).length;
+    });
+  }
+
+  await page.setViewportSize({ width: 320, height: 740 });
+  expect(await visiblePhrases()).toBe(2);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  expect(await visiblePhrases()).toBe(4);
+});
+
 test('pide una cuenta para reservar y conserva el servicio elegido al registrarse', async ({
   page,
 }) => {
