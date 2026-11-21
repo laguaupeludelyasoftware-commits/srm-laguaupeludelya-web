@@ -1,3 +1,4 @@
+import { SettingsSection } from './SettingsSection';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { Button, Field, Notice } from '../../components/ui';
@@ -47,8 +48,7 @@ export function BusinessContactForm() {
   }
 
   return (
-    <section className="panel settings-panel">
-      <h2>Contacto de la web</h2>
+    <SettingsSection title="Contacto de la web">
       {business.isPending && <p role="status">Cargando datos de contacto…</p>}
       {business.isError && <Notice error>No se pudo consultar el contacto.</Notice>}
       {business.isSuccess && (
@@ -79,6 +79,6 @@ export function BusinessContactForm() {
           </Button>
         </form>
       )}
-    </section>
+    </SettingsSection>
   );
 }

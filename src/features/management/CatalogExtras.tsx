@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
-import { Button, Field, Modal, Notice } from '../../components/ui';
+import { Button, Field, Notice } from '../../components/ui';
+import { CatalogWorkspace } from './CatalogWorkspace';
 import { euros } from '../../domain/rules';
 import type { Extra } from '../booking/BookingExtras';
 import { ownerRequest } from './OwnerAccess';
@@ -58,13 +59,11 @@ export function CatalogExtras({
   }
 
   return (
-    <Modal
-      open
+    <CatalogWorkspace
       title={editing === 'new' ? 'Nuevo extra' : current ? 'Editar extra' : 'Catálogo de extras'}
       description="Puedes asignar un extra a varios servicios."
-      onOpenChange={(open) => {
-        if (!open && !save.isPending) onClose();
-      }}
+      onBack={onClose}
+      busy={save.isPending}
     >
       {!editing && (
         <div className="form-stack">
@@ -156,6 +155,6 @@ export function CatalogExtras({
           </Button>
         </form>
       )}
-    </Modal>
+    </CatalogWorkspace>
   );
 }

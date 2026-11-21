@@ -17,15 +17,15 @@ export function SettingsPage() {
     <>
       <PageHeading
         eyebrow="GESTIÓN"
-        title="Configuración"
-        description="Gestiona el contacto, los horarios y el plazo de cancelación."
+        title="Horarios y reservas"
+        description="Configura la atención, las reservas y los datos de tu negocio."
       />
-      <div className="management-stack management-settings">
-        <BusinessContactForm />
+      <div className="management-stack">
         <BusinessHoursForm />
         <ScheduleExceptionsForm />
         <BookingPolicyForm />
         <ReminderSettings />
+        <BusinessContactForm />
         <OwnerPasswordForm />
       </div>
     </>

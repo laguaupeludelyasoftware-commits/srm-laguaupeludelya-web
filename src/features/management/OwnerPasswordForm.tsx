@@ -1,3 +1,4 @@
+import { SettingsSection } from './SettingsSection';
 import { useState, type FormEvent } from 'react';
 import { Button, Field, Notice } from '../../components/ui';
 import { ownerToken } from './OwnerAccess';
@@ -65,8 +66,7 @@ export function OwnerPasswordForm() {
   }
 
   return (
-    <section className="panel settings-panel">
-      <h2>Cambiar contraseña</h2>
+    <SettingsSection title="Cambiar contraseña">
       <form className="form-stack" onSubmit={save}>
         <Field label="Contraseña actual" htmlFor="owner-current-password">
           <input
@@ -107,6 +107,6 @@ export function OwnerPasswordForm() {
           {pending ? 'Guardando…' : 'Guardar contraseña'}
         </Button>
       </form>
-    </section>
+    </SettingsSection>
   );
 }

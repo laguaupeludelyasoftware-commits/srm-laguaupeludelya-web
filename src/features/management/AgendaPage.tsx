@@ -139,10 +139,12 @@ export function AgendaPage({ demo = false }: { demo?: boolean }) {
       }));
   const appointmentDay = (appointment: AgendaAppointment) =>
     demo ? dateKey(new Date(appointment.startsAt)) : appointment.startsAt.slice(0, 10);
-  const confirmed = appointments.filter(
-    (a) => a.status === 'confirmed' && appointmentDay(a) === day,
-  );
+  const confirmed = appointments.filter((appointment) => {
+    const date = appointmentDay(appointment);
+    return appointment.status === 'confirmed' && date >= from && date < until;
+  });
   const minutes = confirmed.reduce((sum, a) => sum + a.duration, 0);
+  const period = { day: 'del día', week: 'de la semana', month: 'del mes' }[view];
   const columns = days.map((date) => ({
     date,
     appointments: appointments
@@ -310,8 +312,10 @@ export function AgendaPage({ demo = false }: { demo?: boolean }) {
             <CalendarDays size={21} />
           </span>
           <div>
-            <small>Citas confirmadas del día</small>
-            <strong>{confirmed.length.toString().padStart(2, '0')}</strong>
+            <small>Citas confirmadas {period}</small>
+            <strong>
+              {demo || agenda.isSuccess ? confirmed.length.toString().padStart(2, '0') : '—'}
+            </strong>
           </div>
         </div>
         <div className="stat-card">
@@ -319,12 +323,18 @@ export function AgendaPage({ demo = false }: { demo?: boolean }) {
             <Clock3 size={21} />
           </span>
           <div>
-            <small>Tiempo de cuidados</small>
+            <small>Tiempo de cuidados {period}</small>
             <strong>
-              {Math.floor(minutes / 60)}
-              <small> h </small>
-              {minutes % 60}
-              <small> min</small>
+              {demo || agenda.isSuccess ? (
+                <>
+                  {Math.floor(minutes / 60)}
+                  <small> h </small>
+                  {minutes % 60}
+                  <small> min</small>
+                </>
+              ) : (
+                '—'
+              )}
             </strong>
           </div>
         </div>

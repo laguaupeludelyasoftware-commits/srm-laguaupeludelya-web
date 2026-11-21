@@ -47,16 +47,24 @@ test('crea un extra de catálogo y lo asigna al crear un servicio', async ({ pag
   expect(Math.abs(servicePosition.y - extraPosition.y)).toBeLessThan(2);
   expect(extraPosition.x - servicePosition.x - servicePosition.width).toBeGreaterThanOrEqual(8);
   await newExtra.click();
-  await expect(page.getByRole('dialog', { name: 'Nuevo extra' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Nuevo extra' })).toBeVisible();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(newService).toHaveCount(0);
   await page.getByLabel('Nombre del extra').fill(extra.name);
   await page.getByLabel('Precio adicional').fill(String(extra.price));
   await page.getByLabel('Minutos adicionales').fill(String(extra.duration));
   await page.getByLabel('Publicar extra').check();
   await page.getByRole('button', { name: 'Guardar extra' }).click();
   await expect(page.getByText(extra.name, { exact: true })).toBeVisible();
-  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Volver a servicios' }).click();
+  await page.getByRole('button', { name: 'Gestionar extras' }).click();
+  await expect(page.getByRole('heading', { name: 'Catálogo de extras' })).toBeVisible();
+  await expect(page.getByText(extra.name, { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Volver a servicios' }).click();
 
   await page.getByRole('button', { name: 'Nuevo servicio' }).click();
+  await expect(page.getByRole('heading', { name: 'Nuevo servicio' })).toBeVisible();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.getByLabel('Nombre del servicio').fill(service.name);
   await page.getByLabel('Precio base').fill(String(service.price));
   await page.getByLabel('Duración (minutos)').fill(String(service.duration));

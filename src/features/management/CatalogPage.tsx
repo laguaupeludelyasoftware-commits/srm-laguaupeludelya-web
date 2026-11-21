@@ -3,12 +3,13 @@ import type { FormEvent } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Clock3, Pencil, Plus, Scissors } from 'lucide-react';
 import { PageHeading } from '../../components/layout';
-import { Button, Field, Modal, Notice } from '../../components/ui';
+import { Button, Field, Notice } from '../../components/ui';
 import type { Service, Species } from '../../domain/models';
 import { euros } from '../../domain/rules';
 import { ownerToken } from './OwnerAccess';
 import { CatalogExtras, useCatalogExtras } from './CatalogExtras';
 import { CatalogVariants } from './CatalogVariants';
+import { CatalogWorkspace } from './CatalogWorkspace';
 
 const catalogUrl = '/api/management/services';
 const catalogKey = ['owner-catalog'];
@@ -29,7 +30,7 @@ export function CatalogPage() {
     },
   });
   const [editing, setEditing] = useState<ManagedService | 'new' | null>(null);
-  const [extrasDialog, setExtrasDialog] = useState<'list' | 'new'>();
+  const [extrasView, setExtrasView] = useState<'list' | 'new'>();
   const [variantService, setVariantService] = useState<Service | null>(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -94,104 +95,24 @@ export function CatalogPage() {
       setSaving(false);
     }
   }
-  return (
-    <>
-      <PageHeading
-        eyebrow="CADA MANTO, SU CUIDADO"
-        title="Servicios con tu sello."
-        description="Lo que ofreces y cómo lo cuentas, en un mismo lugar."
-        action={
-          <div className="catalog-heading-actions">
-            <Button
-              onClick={() => {
-                setError('');
-                setEditing('new');
-              }}
-            >
-              <Plus size={17} /> Nuevo servicio
-            </Button>
-            <Button variant="outline" onClick={() => setExtrasDialog('new')}>
-              <Plus size={17} /> Nuevo extra
-            </Button>
-          </div>
-        }
+  if (extrasView) {
+    return (
+      <CatalogExtras
+        startCreating={extrasView === 'new'}
+        onClose={() => setExtrasView(undefined)}
       />
-      <div className="catalog-extras-help">
-        <p className="muted">
-          Crea primero los extras. Después podrás añadirlos al crear o editar un servicio.
-        </p>
-        <Button variant="outline" onClick={() => setExtrasDialog('list')}>
-          Gestionar extras
-        </Button>
-      </div>
-      {message && <Notice>{message}</Notice>}
-      {catalog.isPending && <p role="status">Cargando servicios…</p>}
-      {catalog.isError && <Notice error>No se pudo consultar el catálogo.</Notice>}
-      {catalog.data?.length === 0 && (
-        <p>Aún no hay servicios. Añade el primero para preparar el catálogo.</p>
-      )}
-      <div className="catalog-grid">
-        {catalog.data?.map((s) => (
-          <article className="panel catalog-card" key={s.id}>
-            <div className="section-bar">
-              <span className="service-icon">
-                <Scissors size={23} strokeWidth={1.3} />
-              </span>
-              <span className={`badge ${s.active ? 'badge-attended' : 'badge-cancelled'}`}>
-                {s.active ? 'Publicado' : 'Desactivado'}
-              </span>
-            </div>
-            <h2>{s.name}</h2>
-            <p className="muted">{s.description}</p>
-            <div className="species-tags">
-              {s.species.map((sp) => (
-                <span className="soft-tag" key={sp}>
-                  {sp}
-                </span>
-              ))}
-            </div>
-            <div className="catalog-price">
-              <strong>
-                {euros(s.price)}
-                <small> orientativos</small>
-              </strong>
-              <span>
-                <Clock3 size={14} /> {s.duration} min
-              </span>
-            </div>
-            <div className="catalog-card-actions">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setError('');
-                  setEditing(s);
-                }}
-              >
-                <Pencil size={15} /> Editar servicio
-              </Button>
-              <Button variant="outline" onClick={() => setVariantService(s)}>
-                Ajustes por mascota
-              </Button>
-            </div>
-          </article>
-        ))}
-      </div>
-      {extrasDialog && (
-        <CatalogExtras
-          startCreating={extrasDialog === 'new'}
-          onClose={() => setExtrasDialog(undefined)}
-        />
-      )}
-      {variantService && (
-        <CatalogVariants service={variantService} onClose={() => setVariantService(null)} />
-      )}
-      <Modal
-        title={current ? 'Afinamos este cuidado' : 'Un nuevo cuidado'}
+    );
+  }
+  if (variantService) {
+    return <CatalogVariants service={variantService} onClose={() => setVariantService(null)} />;
+  }
+  if (editing) {
+    return (
+      <CatalogWorkspace
+        title={current ? 'Editar servicio' : 'Nuevo servicio'}
         description="Los servicios publicados aparecen en la web y en el formulario de reserva."
-        open={!!editing}
-        onOpenChange={(open) => {
-          if (!open && !saving) setEditing(null);
-        }}
+        onBack={() => setEditing(null)}
+        busy={saving}
       >
         <form className="form-stack" onSubmit={save} key={current?.id ?? 'new'}>
           {error && <Notice error>{error}</Notice>}
@@ -287,7 +208,92 @@ export function CatalogPage() {
             {saving ? 'Guardando…' : 'Guardar servicio'}
           </Button>
         </form>
-      </Modal>
+      </CatalogWorkspace>
+    );
+  }
+
+  return (
+    <>
+      <PageHeading
+        eyebrow="CADA MANTO, SU CUIDADO"
+        title="Servicios con tu sello."
+        description="Lo que ofreces y cómo lo cuentas, en un mismo lugar."
+        action={
+          <div className="catalog-heading-actions">
+            <Button
+              onClick={() => {
+                setError('');
+                setEditing('new');
+              }}
+            >
+              <Plus size={17} /> Nuevo servicio
+            </Button>
+            <Button variant="outline" onClick={() => setExtrasView('new')}>
+              <Plus size={17} /> Nuevo extra
+            </Button>
+          </div>
+        }
+      />
+      <div className="catalog-extras-help">
+        <p className="muted">
+          Crea primero los extras. Después podrás añadirlos al crear o editar un servicio.
+        </p>
+        <Button variant="outline" onClick={() => setExtrasView('list')}>
+          Gestionar extras
+        </Button>
+      </div>
+      {message && <Notice>{message}</Notice>}
+      {catalog.isPending && <p role="status">Cargando servicios…</p>}
+      {catalog.isError && <Notice error>No se pudo consultar el catálogo.</Notice>}
+      {catalog.data?.length === 0 && (
+        <p>Aún no hay servicios. Añade el primero para preparar el catálogo.</p>
+      )}
+      <div className="catalog-grid">
+        {catalog.data?.map((s) => (
+          <article className="panel catalog-card" key={s.id}>
+            <div className="section-bar">
+              <span className="service-icon">
+                <Scissors size={23} strokeWidth={1.3} />
+              </span>
+              <span className={`badge ${s.active ? 'badge-attended' : 'badge-cancelled'}`}>
+                {s.active ? 'Publicado' : 'Desactivado'}
+              </span>
+            </div>
+            <h2>{s.name}</h2>
+            <p className="muted">{s.description}</p>
+            <div className="species-tags">
+              {s.species.map((sp) => (
+                <span className="soft-tag" key={sp}>
+                  {sp}
+                </span>
+              ))}
+            </div>
+            <div className="catalog-price">
+              <strong>
+                {euros(s.price)}
+                <small> orientativos</small>
+              </strong>
+              <span>
+                <Clock3 size={14} /> {s.duration} min
+              </span>
+            </div>
+            <div className="catalog-card-actions">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setError('');
+                  setEditing(s);
+                }}
+              >
+                <Pencil size={15} /> Editar servicio
+              </Button>
+              <Button variant="outline" onClick={() => setVariantService(s)}>
+                Ajustes por mascota
+              </Button>
+            </div>
+          </article>
+        ))}
+      </div>
     </>
   );
 }

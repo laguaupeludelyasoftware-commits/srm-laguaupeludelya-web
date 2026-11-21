@@ -1,3 +1,4 @@
+import { SettingsSection } from './SettingsSection';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { FormEvent } from 'react';
 import { Button, Field, Notice } from '../../components/ui';
@@ -52,8 +53,7 @@ export function ReminderSettings() {
   }
 
   return (
-    <section className="panel settings-panel">
-      <h2>Recordatorios automáticos por WhatsApp</h2>
+    <SettingsSection title="Recordatorios automáticos por WhatsApp">
       {settings.isPending && <p role="status">Cargando configuración…</p>}
       {settings.isError && <Notice error>No se pudo consultar la configuración.</Notice>}
       {settings.data && (
@@ -113,6 +113,6 @@ export function ReminderSettings() {
       )}
       {save.isError && <Notice error>No se pudo guardar la configuración.</Notice>}
       {save.isSuccess && <Notice>Configuración guardada.</Notice>}
-    </section>
+    </SettingsSection>
   );
 }

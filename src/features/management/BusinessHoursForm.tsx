@@ -1,5 +1,7 @@
+import { SettingsSection } from './SettingsSection';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
+import { Plus, X } from 'lucide-react';
 import { Button, Field, Notice } from '../../components/ui';
 import { businessDays, usePublicBusiness, type BusinessInterval } from '../../data/public-business';
 import { ownerToken } from './OwnerAccess';
@@ -10,12 +12,11 @@ type EditableInterval = BusinessInterval & { key: string };
 export function BusinessHoursForm() {
   const business = usePublicBusiness();
   return (
-    <section className="panel settings-panel">
-      <h2>Horario de atención</h2>
+    <SettingsSection title="Horario de atención" initiallyOpen>
       {business.isPending && <p role="status">Cargando el horario…</p>}
       {business.isError && <Notice error>No se pudo consultar el horario.</Notice>}
       {business.data && <ScheduleEditor initial={business.data.hours ?? []} />}
-    </section>
+    </SettingsSection>
   );
 }
 
@@ -78,63 +79,69 @@ function ScheduleEditor({ initial }: { initial: BusinessInterval[] }) {
       <p>
         Para un turno partido, añade dos tramos al mismo día. Deja sin tramos los días de cierre.
       </p>
-      {businessDays.map((label, index) => {
-        const day = index + 1;
-        const rows = intervals.filter((interval) => interval.day === day);
-        return (
-          <fieldset key={day} className="business-hours-day" disabled={saving}>
-            <legend>{label}</legend>
-            {rows.length === 0 && <p className="muted">Cerrado</p>}
-            {rows.map((interval, rowIndex) => (
-              <div className="business-hours-row" key={interval.key}>
-                <Field label="Apertura" htmlFor={`start-${interval.key}`}>
-                  <input
-                    id={`start-${interval.key}`}
-                    type="time"
-                    required
-                    value={interval.start}
-                    aria-label={`Apertura ${label}, tramo ${rowIndex + 1}`}
-                    onChange={(event) => change(interval.key, 'start', event.target.value)}
-                  />
-                </Field>
-                <Field label="Cierre" htmlFor={`end-${interval.key}`}>
-                  <input
-                    id={`end-${interval.key}`}
-                    type="time"
-                    required
-                    value={interval.end}
-                    aria-label={`Cierre ${label}, tramo ${rowIndex + 1}`}
-                    onChange={(event) => change(interval.key, 'end', event.target.value)}
-                  />
-                </Field>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  aria-label={`Quitar tramo ${rowIndex + 1} de ${label}`}
-                  onClick={() => {
-                    setIntervals((current) => current.filter((row) => row.key !== interval.key));
-                    setMessage('');
-                  }}
-                >
-                  Quitar
-                </Button>
-              </div>
-            ))}
-            <Button
-              type="button"
-              variant="outline"
-              aria-label={`Añadir tramo de ${label}`}
-              onClick={() => {
-                const row = { day, start: '', end: '', key: crypto.randomUUID() };
-                setIntervals((current) => [...current, row]);
-                setMessage('');
-              }}
-            >
-              Añadir tramo
-            </Button>
-          </fieldset>
-        );
-      })}
+      <div className="business-hours-grid">
+        {businessDays.map((label, index) => {
+          const day = index + 1;
+          const rows = intervals.filter((interval) => interval.day === day);
+          return (
+            <fieldset key={day} className="business-hours-day" disabled={saving}>
+              <legend>{label}</legend>
+              <p className={rows.length ? 'business-hours-open' : 'muted'}>
+                {rows.length
+                  ? `${rows.length} ${rows.length === 1 ? 'tramo' : 'tramos'}`
+                  : 'Cerrado'}
+              </p>
+              {rows.map((interval, rowIndex) => (
+                <div className="business-hours-row" key={interval.key}>
+                  <Field label="Apertura" htmlFor={`start-${interval.key}`}>
+                    <input
+                      id={`start-${interval.key}`}
+                      type="time"
+                      required
+                      value={interval.start}
+                      aria-label={`Apertura ${label}, tramo ${rowIndex + 1}`}
+                      onChange={(event) => change(interval.key, 'start', event.target.value)}
+                    />
+                  </Field>
+                  <Field label="Cierre" htmlFor={`end-${interval.key}`}>
+                    <input
+                      id={`end-${interval.key}`}
+                      type="time"
+                      required
+                      value={interval.end}
+                      aria-label={`Cierre ${label}, tramo ${rowIndex + 1}`}
+                      onChange={(event) => change(interval.key, 'end', event.target.value)}
+                    />
+                  </Field>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    aria-label={`Quitar tramo ${rowIndex + 1} de ${label}`}
+                    onClick={() => {
+                      setIntervals((current) => current.filter((row) => row.key !== interval.key));
+                      setMessage('');
+                    }}
+                  >
+                    <X size={17} aria-hidden="true" />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                aria-label={`Añadir tramo de ${label}`}
+                onClick={() => {
+                  const row = { day, start: '', end: '', key: crypto.randomUUID() };
+                  setIntervals((current) => [...current, row]);
+                  setMessage('');
+                }}
+              >
+                <Plus size={17} aria-hidden="true" /> Añadir tramo
+              </Button>
+            </fieldset>
+          );
+        })}
+      </div>
       {error && <Notice error>{error}</Notice>}
       {message && <Notice>{message}</Notice>}
       <Button type="submit" disabled={saving}>

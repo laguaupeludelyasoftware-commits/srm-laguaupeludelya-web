@@ -198,6 +198,17 @@ test('acciones táctiles y guardado de la política en tablet y móvil', async (
   page,
 }, testInfo) => {
   let cancellationHours = 8;
+  const hours = [{ day: 1, start: '09:00', end: '13:00' }];
+  await page.route('**/api/public/business', (route) =>
+    route.fulfill({ json: { contact: null, services: [], hours } }),
+  );
+  await page.route('**/api/management/hours', (route) => {
+    expect(route.request().postDataJSON()).toEqual([
+      ...hours,
+      { day: 1, start: '16:00', end: '19:00' },
+    ]);
+    return route.fulfill({ json: route.request().postDataJSON() });
+  });
   await page.route('**/api/management/appointments/policy', (route) => {
     if (route.request().method() === 'PUT') {
       cancellationHours = route.request().postDataJSON().cancellationHours;
@@ -205,10 +216,21 @@ test('acciones táctiles y guardado de la política en tablet y móvil', async (
     return route.fulfill({ json: { cancellationHours } });
   });
   await page.goto('/gestion/configuracion');
+  await expect(page.locator('.business-hours-day')).toHaveCount(7);
+  await expect(page.getByRole('group', { name: 'Domingo' }).getByText('Cerrado')).toBeVisible();
+  await page.getByRole('button', { name: 'Añadir tramo de Lunes' }).click();
+  await page.getByLabel('Apertura Lunes, tramo 2').fill('16:00');
+  await page.getByLabel('Cierre Lunes, tramo 2').fill('19:00');
+  await page.getByRole('button', { name: 'Publicar horario' }).click();
+  await expect(page.getByText('Horario actualizado en la web.')).toBeVisible();
+  const cancellation = page.locator('summary').filter({ hasText: 'Cancelación de citas' });
+  await expect(page.getByLabel('Plazo de cancelación (horas)')).toBeHidden();
+  await cancellation.click();
   await page.getByLabel('Plazo de cancelación (horas)').fill('12');
   await page.getByRole('button', { name: 'Guardar plazo', exact: true }).click();
   await expect(page.getByText('Plazo de cancelación guardado.')).toBeVisible();
   await page.reload();
+  await cancellation.click();
   await expect(page.getByLabel('Plazo de cancelación (horas)')).toHaveValue('12');
   if (testInfo.project.name !== 'escritorio') {
     const smallControls = await page.locator('.button, .icon-button').evaluateAll((elements) =>
@@ -221,5 +243,49 @@ test('acciones táctiles y guardado de la política en tablet y móvil', async (
     );
     expect(smallControls).toEqual([]);
   }
+  await expectNoPageOverflow(page);
+});
+
+test('las tarjetas de agenda resumen el periodo visible sin incluir citas canceladas', async ({
+  page,
+}) => {
+  await page.clock.setFixedTime(new Date('2027-03-18T12:00:00+01:00'));
+  await page.route('**/api/public/business', (route) =>
+    route.fulfill({ json: { contact: null, services: [], hours: [] } }),
+  );
+  await page.route('**/api/management/appointments?*', (route) => {
+    const rows = [
+      { startsAt: '2027-03-18T10:00:00', duration: 45, status: 'CONFIRMED' },
+      { startsAt: '2027-03-19T11:00:00', duration: 60, status: 'CONFIRMED' },
+      { startsAt: '2027-03-25T10:00:00', duration: 75, status: 'CONFIRMED' },
+      { startsAt: '2027-03-18T12:00:00', duration: 90, status: 'CANCELLED_ON_TIME' },
+      { startsAt: '2027-04-01T10:00:00', duration: 30, status: 'CONFIRMED' },
+    ];
+    return route.fulfill({
+      json: rows.map((row, index) => ({
+        ...row,
+        id: String(index),
+        petName: 'Milo',
+        clientName: 'Ana',
+        serviceName: 'Baño',
+        price: 25,
+      })),
+    });
+  });
+  await page.goto('/gestion');
+  await expect(page.getByText(/Prototipo · Datos de ejemplo/)).toHaveCount(0);
+  const count = page.locator('.stat-card').filter({ hasText: 'Citas confirmadas' });
+  const duration = page.locator('.stat-card').filter({ hasText: 'Tiempo de cuidados' });
+  await expect(count).toHaveText(/de la semana\s*02/);
+  await expect(duration).toHaveText(/de la semana\s*1 h 45 min/);
+  await page.getByRole('button', { name: 'Día', exact: true }).click();
+  await expect(count).toHaveText(/del día\s*01/);
+  await expect(duration).toHaveText(/del día\s*0 h 45 min/);
+  await page.getByRole('button', { name: 'Mes', exact: true }).click();
+  await expect(count).toHaveText(/del mes\s*03/);
+  await expect(duration).toHaveText(/del mes\s*3 h 0 min/);
+  await page.getByRole('button', { name: 'Periodo siguiente' }).click();
+  await expect(count).toHaveText(/del mes\s*01/);
+  await expect(duration).toHaveText(/del mes\s*0 h 30 min/);
   await expectNoPageOverflow(page);
 });

@@ -201,9 +201,10 @@ const managementLinks = [
 /** Panel adaptable: navegación lateral en escritorio y horizontal en dispositivos pequeños. */
 export function ManagementLayout() {
   const { pathname } = useLocation();
+  const demo = pathname.startsWith('/gestion/demo/');
   return (
     <>
-      <DemoBanner />
+      {demo && <DemoBanner />}
       <div className="management-layout">
         <aside className="sidebar">
           <div className="management-header">
@@ -224,7 +225,7 @@ export function ManagementLayout() {
               <span className="avatar">N</span>
               <div>
                 <strong>Nazaret</strong>
-                <small>Dueña · Modo demostración</small>
+                <small>{demo ? 'Dueña · Modo demostración' : 'Dueña'}</small>
               </div>
               <PawPrint size={18} />
             </div>

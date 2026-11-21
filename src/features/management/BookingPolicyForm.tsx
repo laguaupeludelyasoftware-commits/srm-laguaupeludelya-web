@@ -1,3 +1,4 @@
+import { SettingsSection } from './SettingsSection';
 import { useQuery } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { Button, Field, Notice } from '../../components/ui';
@@ -36,8 +37,7 @@ export function BookingPolicyForm() {
   }
 
   return (
-    <section className="panel settings-panel">
-      <h2>Cancelación de citas</h2>
+    <SettingsSection title="Cancelación de citas">
       <p>
         El plazo guardado se aplica a las nuevas citas. Cada cita conserva el plazo con el que se
         reservó.
@@ -65,6 +65,6 @@ export function BookingPolicyForm() {
       )}
       {error && <Notice error>No se pudo guardar el plazo.</Notice>}
       {saved && <Notice>Plazo de cancelación guardado.</Notice>}
-    </section>
+    </SettingsSection>
   );
 }

@@ -1,3 +1,4 @@
+import { SettingsSection } from './SettingsSection';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { Button, Field, Notice } from '../../components/ui';
@@ -48,8 +49,7 @@ export function ScheduleExceptionsForm() {
   });
 
   return (
-    <section className="panel settings-panel" id="horarios-excepcionales">
-      <h2>Horarios excepcionales</h2>
+    <SettingsSection title="Horarios excepcionales" id="horarios-excepcionales">
       <p>
         Modifica el horario de una fecha para bloquear horas, cerrar el día o hacer una apertura
         especial.
@@ -87,7 +87,7 @@ export function ScheduleExceptionsForm() {
           ))}
         </ul>
       )}
-    </section>
+    </SettingsSection>
   );
 }
 

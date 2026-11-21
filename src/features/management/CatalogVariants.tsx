@@ -1,7 +1,8 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
-import { Button, Field, Modal, Notice } from '../../components/ui';
+import { Button, Field, Notice } from '../../components/ui';
 import type { Service } from '../../domain/models';
+import { CatalogWorkspace } from './CatalogWorkspace';
 import { euros } from '../../domain/rules';
 import { coatOptions } from '../customer/PetForm';
 import { ownerRequest } from './ManualBooking';
@@ -81,13 +82,11 @@ export function CatalogVariants({ service, onClose }: { service: Service; onClos
   }
 
   return (
-    <Modal
-      open
+    <CatalogWorkspace
       title={`Ajustes por mascota · ${service.name}`}
       description="Cambia automáticamente el precio o la duración del servicio según el peso, la raza o el pelaje. Por ejemplo, un baño puede durar más para un perro de pelo largo."
-      onOpenChange={(open) => {
-        if (!open && !save.isPending) onClose();
-      }}
+      onBack={onClose}
+      busy={save.isPending}
     >
       {variants.isPending && <p role="status">Cargando ajustes…</p>}
       {variants.isError && <Notice error>No se pudieron consultar los ajustes.</Notice>}
@@ -275,6 +274,6 @@ export function CatalogVariants({ service, onClose }: { service: Service; onClos
           </Button>
         </form>
       )}
-    </Modal>
+    </CatalogWorkspace>
   );
 }
