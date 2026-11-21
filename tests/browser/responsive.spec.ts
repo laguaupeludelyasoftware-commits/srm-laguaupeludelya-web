@@ -47,10 +47,12 @@ test('pantallas principales sin errores ni desbordamiento de página', async ({
   const menu = page.getByRole('button', { name: 'Abrir menú' });
   if (await menu.isVisible()) {
     await menu.click();
-    await page.getByRole('link', { name: 'Mi espacio', exact: true }).click();
-    await expect(page).toHaveURL(/iniciar-sesion/);
-    await expect(page.locator('h1')).toBeVisible();
   }
+  const navigation = page.getByRole('navigation', { name: 'Principal' });
+  await expect(navigation.getByRole('link', { name: 'Mi espacio', exact: true })).toHaveCount(0);
+  await navigation.getByRole('link', { name: 'Iniciar sesión', exact: true }).click();
+  await expect(page).toHaveURL(/iniciar-sesion/);
+  await expect(page.locator('h1')).toBeVisible();
 });
 
 test('reserva completa y cancelación desde el área cliente', async ({ page }) => {

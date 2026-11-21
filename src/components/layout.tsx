@@ -1,17 +1,26 @@
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   ArrowUpRight,
+  Bell,
   CalendarDays,
+  ChevronDown,
   House,
+  LogOut,
   Menu,
   PawPrint,
   Scissors,
   Settings2,
+  UserRound,
   Users,
   X,
 } from 'lucide-react';
 import { useDemo } from '../data/demo-store';
+import {
+  getClientToken,
+  useClientLogout,
+  useClientProfile,
+} from '../features/customer/client-session';
 import { OwnerLogout } from '../features/management/OwnerAccess';
 import { Button } from './ui';
 
@@ -43,38 +52,121 @@ export function ScrollToTop() {
 
 /** Marco público con menú móvil y aviso de demostración en todos los recorridos. */
 export function PublicLayout() {
-  const [menu, setMenu] = useState(false);
+  const [menu, setMenu] = useState<'navigation' | 'account' | null>(null);
   const location = useLocation();
-  useEffect(() => setMenu(false), [location]);
+  const profile = useClientProfile(getClientToken()).data;
+  const logout = useClientLogout();
+  const account = useRef<HTMLDivElement>(null);
+  const accountButton = useRef<HTMLButtonElement>(null);
+  const accountOpen = menu === 'account';
+  const initials = profile?.name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((word) => Array.from(word)[0])
+    .join('')
+    .toLocaleUpperCase('es');
+
+  useEffect(() => setMenu(null), [location]);
+  useEffect(() => {
+    if (!accountOpen) return;
+    function handleOutside(event: PointerEvent) {
+      if (event.target instanceof Node && !account.current?.contains(event.target)) {
+        setMenu(null);
+      }
+    }
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setMenu(null);
+        accountButton.current?.focus();
+      }
+    }
+    document.addEventListener('pointerdown', handleOutside);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('pointerdown', handleOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [accountOpen]);
   return (
     <>
       <header className="public-header">
         <div className="container header-inner">
           <Brand />
-          <button
-            className="icon-button mobile-menu-button"
-            onClick={() => setMenu(!menu)}
-            aria-expanded={menu}
-            aria-controls="public-nav"
-            aria-label={menu ? 'Cerrar menú' : 'Abrir menú'}
-          >
-            {menu ? <X /> : <Menu />}
-          </button>
           <nav
             id="public-nav"
-            className={menu ? 'public-nav open' : 'public-nav'}
+            className={menu === 'navigation' ? 'public-nav open' : 'public-nav'}
             aria-label="Principal"
           >
             <a href="/#servicios">Nuestros cuidados</a>
             <a href="/#filosofia">El espacio de Lya</a>
             <a href="/#contacto">Contacto</a>
-            <NavLink to="/mi-espacio">Mi espacio</NavLink>
+            {!profile && <NavLink to="/iniciar-sesion">Iniciar sesión</NavLink>}
             <Button asChild size="small">
               <Link to="/reservar">
                 Reservar cita <ArrowUpRight size={16} />
               </Link>
             </Button>
           </nav>
+          <div className="public-header-actions" data-signed-in={!!profile}>
+            <button
+              type="button"
+              className="icon-button mobile-menu-button"
+              onClick={() => setMenu(menu === 'navigation' ? null : 'navigation')}
+              aria-expanded={menu === 'navigation'}
+              aria-controls="public-nav"
+              aria-label={menu === 'navigation' ? 'Cerrar menú' : 'Abrir menú'}
+            >
+              {menu === 'navigation' ? <X /> : <Menu />}
+            </button>
+            {profile && (
+              <div className="public-account" ref={account}>
+                <button
+                  type="button"
+                  className="public-account-trigger"
+                  ref={accountButton}
+                  aria-label="Menú de mi cuenta"
+                  aria-expanded={accountOpen}
+                  aria-controls="public-account-panel"
+                  onClick={() => setMenu(accountOpen ? null : 'account')}
+                >
+                  <span className="public-account-avatar" aria-hidden="true">
+                    {initials || <UserRound size={18} />}
+                  </span>
+                  <ChevronDown size={15} aria-hidden="true" />
+                </button>
+                <div
+                  id="public-account-panel"
+                  className="public-account-panel"
+                  hidden={!accountOpen}
+                >
+                  <div className="public-account-identity">
+                    <strong>{profile.name}</strong>
+                    <small>{profile.email}</small>
+                  </div>
+                  <nav aria-label="Mi cuenta" onClick={() => setMenu(null)}>
+                    <Link to="/mi-espacio">
+                      <UserRound size={17} /> Mi perfil
+                    </Link>
+                    <Link to="/mi-espacio#mascotas">
+                      <PawPrint size={17} /> Mis mascotas
+                    </Link>
+                    <Link to="/reservar">
+                      <CalendarDays size={17} /> Mis citas
+                    </Link>
+                    <Link to="/mi-espacio#recordatorios">
+                      <Bell size={17} /> Recordatorios
+                    </Link>
+                  </nav>
+                  <div className="public-account-bottom">
+                    <button type="button" onClick={logout}>
+                      <LogOut size={17} /> Cerrar sesión
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </header>
       <main id="main-content">

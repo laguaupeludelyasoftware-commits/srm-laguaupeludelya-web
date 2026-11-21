@@ -307,7 +307,7 @@ export function LandingPage() {
         <div className="contact-card">
           <PawPrint size={32} strokeWidth={1.3} />
           <h3>Reserva un ratito para él.</h3>
-          <p>Puedes crear tu cuenta y añadir tus mascotas desde Mi espacio.</p>
+          <p>Crea tu cuenta para añadir tus mascotas y reservar online.</p>
           <Button asChild>
             <Link to="/reservar">
               Consultar reservas <ArrowUpRight size={18} />

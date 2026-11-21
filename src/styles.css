@@ -326,6 +326,100 @@ legend {
 .mobile-menu-button {
   display: none;
 }
+.public-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.public-header-actions[data-signed-in='false'] {
+  display: none;
+}
+.header-inner:has(.public-account) .public-nav {
+  margin-left: auto;
+}
+.public-account {
+  position: relative;
+}
+.public-account-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px 4px 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--cream);
+  color: var(--green-dark);
+  cursor: pointer;
+}
+.public-account-trigger:hover,
+.public-account-trigger[aria-expanded='true'] {
+  border-color: var(--green);
+}
+.public-account-avatar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--green-dark);
+  color: var(--cream);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.public-account-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  width: min(256px, calc(100vw - 40px));
+  max-height: calc(100dvh - 100px);
+  overflow-y: auto;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--cream);
+  box-shadow: 0 12px 28px #344c3a26;
+}
+.public-account-identity {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+.public-account-identity small {
+  color: var(--muted);
+}
+.public-account-panel nav {
+  padding-block: 4px;
+}
+.public-account-panel a,
+.public-account-bottom button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: 9px;
+  color: var(--green-dark);
+  font-size: 0.85rem;
+}
+.public-account-panel a:hover,
+.public-account-bottom button:hover {
+  background: #52655212;
+}
+.public-account-bottom {
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+}
+.public-account-bottom button {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.client-account-anchor {
+  scroll-margin-top: 112px;
+}
 .hero {
   display: grid;
   grid-template-columns: 1.15fr 1fr;
@@ -2581,6 +2675,15 @@ td > small {
   }
   .mobile-menu-button {
     display: flex;
+  }
+  .public-header-actions[data-signed-in='false'] {
+    display: flex;
+  }
+  .header-inner:has(.public-account) {
+    gap: 8px;
+  }
+  .client-account-anchor {
+    scroll-margin-top: 94px;
   }
   .public-nav {
     display: none;

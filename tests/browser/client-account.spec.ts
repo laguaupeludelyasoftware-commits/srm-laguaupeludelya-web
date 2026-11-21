@@ -98,6 +98,8 @@ test('registra, cierra sesión y vuelve a entrar sin verificar el correo', async
     });
   });
   await page.goto('/registro');
+  const accountMenu = page.getByRole('button', { name: 'Menú de mi cuenta' });
+  await expect(accountMenu).toHaveCount(0);
   await page.getByLabel('Tu nombre').fill('Clara Prueba');
   await page.getByLabel('Correo electrónico').fill('clara@example.com');
   await page.getByLabel('Contraseña').fill('client-test-password');
@@ -107,12 +109,31 @@ test('registra, cierra sesión y vuelve a entrar sin verificar el correo', async
   await expect(page.getByText('Correo electrónico: clara@example.com')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Mis mascotas' })).toBeVisible();
   await expect(page.getByText('Verificación de correo pendiente.')).toBeVisible();
+  await accountMenu.click();
+  const accountLinks = page.getByRole('navigation', { name: 'Mi cuenta', exact: true });
+  await expect(accountLinks.getByRole('link', { name: 'Mi perfil' })).toHaveAttribute(
+    'href',
+    '/mi-espacio',
+  );
+  await expect(accountLinks.getByRole('link', { name: 'Mis citas' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(accountMenu).toBeFocused();
+  await expect(accountLinks).toBeHidden();
+  await accountMenu.click();
+  await accountLinks.getByRole('link', { name: 'Recordatorios' }).click();
+  await expect(page).toHaveURL(/\/mi-espacio#recordatorios$/);
+  await expect(accountLinks).toBeHidden();
   await page.getByLabel('Teléfono para recordatorios').fill('600 123 456');
   await page.getByLabel(/acepto recibir recordatorios/).check();
   await page.getByRole('button', { name: 'Guardar preferencias' }).click();
   await expect(page.getByText('Preferencias guardadas.')).toBeVisible();
-  await page.getByRole('button', { name: 'Cerrar sesión' }).click();
+  await accountMenu.click();
+  await page
+    .locator('#public-account-panel')
+    .getByRole('button', { name: 'Cerrar sesión' })
+    .click();
   await expect(page).toHaveURL(/\/iniciar-sesion$/);
+  await expect(accountMenu).toHaveCount(0);
   await page.getByLabel('Correo electrónico').fill('clara@example.com');
   await page.getByLabel('Contraseña').fill('client-test-password');
   await page.getByRole('button', { name: 'Entrar' }).click();

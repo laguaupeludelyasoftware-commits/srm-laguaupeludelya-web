@@ -1,18 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Field, Notice } from '../../components/ui';
+import { getClientToken, sessionKey, useClientLogout, useClientProfile } from './client-session';
 import { ClientPets } from './ClientPets';
 import { OnlineBooking } from './OnlineBooking';
 import { ReminderPreference } from './ReminderPreference';
-
-const sessionKey = 'guaupelu-client-session';
-
-interface ClientProfile {
-  name: string;
-  email: string;
-  emailVerified: boolean;
-}
 
 /** Registro y entrada de clientes mediante correo y contraseña. */
 export function ClientAccess({ register = false }: { register?: boolean }) {
@@ -127,30 +119,17 @@ export function ClientAccess({ register = false }: { register?: boolean }) {
   );
 }
 
-/** Comprueba la sesión y lee los datos de la cuenta autenticada. */
-function useClientProfile(token: string | null) {
-  return useQuery({
-    queryKey: ['client-profile', token],
-    enabled: !!token,
-    gcTime: 0,
-    retry: false,
-    queryFn: async ({ signal }): Promise<ClientProfile | null> => {
-      const response = await fetch('/api/auth/client/me', {
-        headers: { Authorization: `Bearer ${token}` },
-        signal,
-      });
-      if (response.status === 401 || response.status === 403) return null;
-      if (!response.ok) throw new Error();
-      return response.json();
-    },
-  });
-}
-
 /** Presenta los datos de la cuenta y sus mascotas vinculadas. */
 export function ClientAccount() {
-  const navigate = useNavigate();
-  const token = sessionStorage.getItem(sessionKey);
+  const logout = useClientLogout();
+  const { hash } = useLocation();
+  const token = getClientToken();
   const profile = useClientProfile(token);
+  useEffect(() => {
+    if (hash && profile.data) {
+      document.getElementById(hash.slice(1))?.scrollIntoView();
+    }
+  }, [hash, profile.data]);
   if (!token || profile.data === null) return <Navigate to="/iniciar-sesion" replace />;
 
   return (
@@ -173,17 +152,14 @@ export function ClientAccount() {
                 ? 'Correo verificado.'
                 : 'Verificación de correo pendiente.'}
             </p>
-            <Button
-              onClick={() => {
-                sessionStorage.removeItem(sessionKey);
-                navigate('/iniciar-sesion', { replace: true });
-              }}
-            >
-              Cerrar sesión
-            </Button>
+            <Button onClick={logout}>Cerrar sesión</Button>
           </div>
-          <ClientPets token={token} />
-          <ReminderPreference token={token} />
+          <div id="mascotas" className="client-account-anchor">
+            <ClientPets token={token} />
+          </div>
+          <div id="recordatorios" className="client-account-anchor">
+            <ReminderPreference token={token} />
+          </div>
           <Button asChild>
             <Link to="/reservar">Reservar o consultar mis citas</Link>
           </Button>
@@ -197,7 +173,7 @@ export function ClientAccount() {
 export function ClientBooking() {
   const [params] = useSearchParams();
   const location = useLocation();
-  const token = sessionStorage.getItem(sessionKey);
+  const token = getClientToken();
   const profile = useClientProfile(token);
   if (!token || profile.data === null) {
     return (
