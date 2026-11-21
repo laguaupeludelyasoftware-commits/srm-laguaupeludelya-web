@@ -84,7 +84,7 @@ export function InlineBookingProfile({
         )}
         <fieldset className="form-stack">
           <legend>Nueva mascota</legend>
-          <PetFields species={['Perro', 'Gato']} />
+          <PetFields species={['Perro', 'Gato']} styledSelect />
         </fieldset>
         {error && <Notice error>{error}</Notice>}
         <div className="dialog-actions">

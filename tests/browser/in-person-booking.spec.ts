@@ -87,15 +87,19 @@ test('crea una ficha presencial y reserva para su mascota sin salir de la agenda
   await page.getByLabel('¿Cómo se llama?').fill('Lúa');
   await page.getByLabel('Peso aproximado (kg)').fill('12');
   await page.getByRole('button', { name: 'Guardar ficha y mascota' }).click();
-  await expect(page.getByLabel('Cliente', { exact: true })).toHaveValue('onsite');
-  await expect(page.getByLabel('Mascota', { exact: true })).toHaveValue('lua');
+  await expect(page.getByRole('combobox', { name: 'Cliente', exact: true })).toContainText(
+    'Ana Pérez',
+  );
+  await expect(page.getByRole('combobox', { name: 'Mascota', exact: true })).toHaveText('Lúa');
   await page.getByRole('button', { name: 'Añadir mascota a este cliente' }).click();
   await page.getByLabel('¿Cómo se llama?').fill('Lola');
   await page.getByLabel('Peso aproximado (kg)').fill('8');
   await page.getByRole('button', { name: 'Guardar mascota', exact: true }).click();
-  await expect(page.getByLabel('Mascota', { exact: true })).toHaveValue('lola');
-  await page.getByLabel('Servicio', { exact: true }).selectOption('bath');
-  await page.getByLabel('Hora de Madrid').selectOption({ label: '11:00' });
+  await expect(page.getByRole('combobox', { name: 'Mascota', exact: true })).toHaveText('Lola');
+  await page.getByRole('combobox', { name: 'Servicio', exact: true }).click();
+  await page.getByRole('option', { name: 'Baño · 45 min', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Hora de Madrid', exact: true }).click();
+  await page.getByRole('option', { name: '11:00', exact: true }).click();
   await page.getByRole('button', { name: 'Guardar cita' }).click();
   await expect(page.getByRole('button', { name: /Lola, 11:00, 45 min/ })).toBeVisible();
 });

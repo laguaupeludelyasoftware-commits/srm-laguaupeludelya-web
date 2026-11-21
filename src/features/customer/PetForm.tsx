@@ -1,6 +1,7 @@
 import type { FormEvent } from 'react';
 import { useState } from 'react';
 import { Button, Field, Notice } from '../../components/ui';
+import { SelectField } from '../../components/SelectField';
 import { useDemo } from '../../data/demo-store';
 import type { Pet, Species } from '../../domain/models';
 
@@ -45,14 +46,39 @@ export function PetForm({ clientId, onSaved }: { clientId: string; onSaved: () =
   return (
     <form className="form-stack" onSubmit={save}>
       {error && <Notice error>{error}</Notice>}
-      <PetFields species={state.settings.species} />
+      <PetFields species={state.settings.species} styledSelect />
       <Button type="submit">Guardar mascota de ejemplo</Button>
     </form>
   );
 }
 
 /** Campos editables de la ficha de una mascota. */
-export function PetFields({ species, pet }: { species: Species[]; pet?: PetDetails }) {
+export function PetFields({
+  species,
+  pet,
+  styledSelect = false,
+}: {
+  species: Species[];
+  pet?: PetDetails;
+  styledSelect?: boolean;
+}) {
+  function petSelect(name: 'species' | 'coat', choices: readonly string[], defaultValue?: string) {
+    const id = `pet-${name}`;
+    return styledSelect ? (
+      <SelectField
+        id={id}
+        name={name}
+        defaultValue={defaultValue ?? choices[0]}
+        options={choices.map((choice) => ({ value: choice, label: choice }))}
+      />
+    ) : (
+      <select id={id} name={name} defaultValue={defaultValue}>
+        {choices.map((choice) => (
+          <option key={choice}>{choice}</option>
+        ))}
+      </select>
+    );
+  }
   return (
     <>
       <Field label="¿Cómo se llama?" htmlFor="pet-name">
@@ -60,11 +86,7 @@ export function PetFields({ species, pet }: { species: Species[]; pet?: PetDetai
       </Field>
       <div className="form-grid">
         <Field label="Especie" htmlFor="pet-species">
-          <select id="pet-species" name="species" defaultValue={pet?.species}>
-            {species.map((s) => (
-              <option key={s}>{s}</option>
-            ))}
-          </select>
+          {petSelect('species', species, pet?.species)}
         </Field>
         <Field label="Peso aproximado (kg)" htmlFor="pet-weight">
           <input
@@ -85,11 +107,7 @@ export function PetFields({ species, pet }: { species: Species[]; pet?: PetDetai
           <input id="pet-breed" name="breed" maxLength={80} defaultValue={pet?.breed} />
         </Field>
         <Field label="Pelaje" htmlFor="pet-coat">
-          <select id="pet-coat" name="coat" defaultValue={pet?.coat ?? 'No lo sé'}>
-            {coatOptions.map((coat) => (
-              <option key={coat}>{coat}</option>
-            ))}
-          </select>
+          {petSelect('coat', coatOptions, pet?.coat ?? 'No lo sé')}
         </Field>
       </div>
       <Field label="Algo que debamos saber (opcional)" htmlFor="pet-notes">

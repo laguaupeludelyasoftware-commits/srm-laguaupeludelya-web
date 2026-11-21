@@ -99,7 +99,7 @@ export function ClientPets({
 
   const form = (
     <form className="form-stack" onSubmit={save} key={current?.id ?? 'new'}>
-      <PetFields species={['Perro', 'Gato']} pet={current} />
+      <PetFields species={['Perro', 'Gato']} pet={current} styledSelect={!!clientId} />
       {error && <Notice error>{error}</Notice>}
       <Button type="submit" disabled={saving}>
         {saving

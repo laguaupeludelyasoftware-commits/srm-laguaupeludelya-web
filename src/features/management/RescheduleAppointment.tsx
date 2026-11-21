@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { Button, Field, Notice } from '../../components/ui';
+import { SelectField } from '../../components/SelectField';
 import { appointmentsUrl, ownerRequest } from './ManualBooking';
 
 export function RescheduleAppointment({
@@ -75,20 +76,15 @@ export function RescheduleAppointment({
           />
         </Field>
         <Field label="Nueva hora de Madrid" htmlFor="reschedule-time">
-          <select
+          <SelectField
             id="reschedule-time"
             required
             value={newStart}
             disabled={!slots.data?.length || slots.isFetching}
-            onChange={(event) => setNewStart(event.target.value)}
-          >
-            <option value="">Elige un hueco</option>
-            {slots.data?.map((slot) => (
-              <option key={slot} value={slot}>
-                {slot.slice(11, 16)}
-              </option>
-            ))}
-          </select>
+            onValueChange={setNewStart}
+            placeholder="Elige un hueco"
+            options={(slots.data ?? []).map((slot) => ({ value: slot, label: slot.slice(11, 16) }))}
+          />
         </Field>
         {date >= today && slots.isFetching && <p role="status">Buscando huecos…</p>}
         {slots.isError && (

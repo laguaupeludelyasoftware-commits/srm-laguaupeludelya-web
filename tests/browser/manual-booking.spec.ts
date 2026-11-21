@@ -115,6 +115,16 @@ test('carga un ejemplo editable de ajuste por mascota y lo guarda desactivado', 
   await page.getByRole('button', { name: 'Ajustes por mascota' }).click();
   await expect(page.getByText(/Cambia automáticamente el precio o la duración/)).toBeVisible();
   await page.getByRole('button', { name: 'Cargar ejemplo' }).click();
+  const coat = page.getByRole('combobox', { name: 'Tipo de manto' });
+  await coat.press('ArrowDown');
+  await expect(page.getByRole('listbox')).toBeVisible();
+  await expect(page.getByRole('option', { name: 'Largo', exact: true })).toHaveAttribute(
+    'data-state',
+    'checked',
+  );
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('listbox')).toHaveCount(0);
+  await expect(coat).toBeFocused();
   await expect(page.getByLabel('Publicar ajuste')).not.toBeChecked();
   expect(saved).toBeUndefined();
   await page.getByLabel('Nombre del ajuste').fill('Tramo largo');
@@ -242,12 +252,16 @@ test('guarda una cita con un hueco de la API y la recupera al recargar', async (
 
   await page.goto('/gestion');
   await page.getByRole('button', { name: 'Nueva cita' }).click();
-  await page.getByLabel('Cliente', { exact: true }).selectOption('client');
-  await page.getByLabel('Mascota', { exact: true }).selectOption('pet');
-  await page.getByLabel('Servicio', { exact: true }).selectOption('bath');
+  const choose = async (field: string, option: string) => {
+    await page.getByRole('combobox', { name: field, exact: true }).click();
+    await page.getByRole('option', { name: option, exact: true }).click();
+  };
+  await choose('Cliente', 'Ana · ana@example.test');
+  await choose('Mascota', 'Milo');
+  await choose('Servicio', 'Baño · 45 min');
   await expect(page.getByText('Variante aplicada: Manto corto')).toBeVisible();
   await page.getByLabel(/Cepillado extra/).check();
-  await page.getByLabel('Hora de Madrid').selectOption({ label: '10:00' });
+  await choose('Hora de Madrid', '10:00');
   await page.getByRole('button', { name: 'Guardar cita' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   const appointment = page.getByRole('button', { name: /Milo, 10:00, 60 min/ });
@@ -267,11 +281,11 @@ test('guarda una cita con un hueco de la API y la recupera al recargar', async (
   expect(decodeURIComponent(reminder ?? '')).toContain('la cita de Milo para Baño');
   expect(decodeURIComponent(reminder ?? '')).toContain('10:00 (hora de Madrid)');
   await page.getByRole('button', { name: 'Cambiar fecha u hora' }).click();
-  await page.getByLabel('Nueva hora de Madrid').selectOption({ label: '11:00' });
+  await choose('Nueva hora de Madrid', '11:00');
   await page.getByRole('button', { name: 'Confirmar cambio' }).click();
   await expect(page.getByText(/No se pudo reprogramar/)).toBeVisible();
   await expect(page.getByRole('dialog').getByText(/· 10:00$/)).toBeVisible();
-  await page.getByLabel('Nueva hora de Madrid').selectOption({ label: '11:00' });
+  await choose('Nueva hora de Madrid', '11:00');
   await page.getByRole('button', { name: 'Confirmar cambio' }).click();
   await expect(page.getByText('Cita reprogramada.')).toBeVisible();
   await expect(appointment).toHaveCount(0);

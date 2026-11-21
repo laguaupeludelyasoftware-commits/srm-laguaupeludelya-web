@@ -1072,6 +1072,7 @@ legend {
 }
 .field input,
 .field select,
+.field .select-trigger,
 .field textarea,
 .hours-row input[type='time'] {
   width: 100%;
@@ -1082,6 +1083,70 @@ legend {
   background: #fffefa;
   color: #394333;
   font-size: 0.82rem;
+}
+.select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  text-align: left;
+  cursor: pointer;
+}
+.select-trigger > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.select-trigger svg {
+  flex-shrink: 0;
+}
+.field .select-trigger[data-state='open'] {
+  border-color: var(--green);
+}
+.select-trigger[data-placeholder] {
+  color: var(--muted);
+}
+.select-trigger:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.select-content {
+  z-index: 110;
+  width: var(--radix-select-trigger-width);
+  max-height: min(18rem, var(--radix-select-content-available-height));
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fffefa;
+  color: var(--green-dark);
+  box-shadow: 0 10px 26px #344c3a26;
+}
+.select-options {
+  padding: 4px;
+}
+.select-option {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 0.84rem;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.select-option[data-state='checked'] {
+  font-weight: 700;
+}
+.select-option[data-highlighted] {
+  outline: none;
+  background: #e8eee2;
+}
+.select-scroll {
+  display: grid;
+  place-items: center;
+  min-height: 24px;
 }
 .field input::placeholder,
 .field textarea::placeholder {

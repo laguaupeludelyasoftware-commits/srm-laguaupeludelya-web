@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { Button, Field, Notice } from '../../components/ui';
+import { SelectField } from '../../components/SelectField';
 import type { Service } from '../../domain/models';
 import { CatalogWorkspace } from './CatalogWorkspace';
 import { euros } from '../../domain/rules';
@@ -68,9 +69,9 @@ export function CatalogVariants({ service, onClose }: { service: Service; onClos
       optionalText(name) === null ? null : Number(data.get(name));
     save.mutate({
       name: String(data.get('name')).trim(),
-      species: optionalText('species'),
+      species: data.get('species') === 'any' ? null : optionalText('species'),
       breed: optionalText('breed'),
-      coat: optionalText('coat'),
+      coat: data.get('coat') === 'any' ? null : optionalText('coat'),
       minWeight: optionalNumber('minWeight'),
       maxWeight: optionalNumber('maxWeight'),
       priority: Number(data.get('priority')),
@@ -152,20 +153,26 @@ export function CatalogVariants({ service, onClose }: { service: Service; onClos
           </Field>
           <div className="form-grid">
             <Field label="Especie" htmlFor="variant-species">
-              <select id="variant-species" name="species" defaultValue={initial?.species ?? ''}>
-                <option value="">Cualquiera admitida</option>
-                {service.species.map((species) => (
-                  <option key={species}>{species}</option>
-                ))}
-              </select>
+              <SelectField
+                id="variant-species"
+                name="species"
+                defaultValue={initial?.species ?? 'any'}
+                options={[
+                  { value: 'any', label: 'Cualquiera admitida' },
+                  ...service.species.map((species) => ({ value: species, label: species })),
+                ]}
+              />
             </Field>
             <Field label="Tipo de manto" htmlFor="variant-coat">
-              <select id="variant-coat" name="coat" defaultValue={initial?.coat ?? ''}>
-                <option value="">Cualquiera</option>
-                {coatOptions.map((coat) => (
-                  <option key={coat}>{coat}</option>
-                ))}
-              </select>
+              <SelectField
+                id="variant-coat"
+                name="coat"
+                defaultValue={initial?.coat ?? 'any'}
+                options={[
+                  { value: 'any', label: 'Cualquiera' },
+                  ...coatOptions.map((coat) => ({ value: coat, label: coat })),
+                ]}
+              />
             </Field>
             <Field
               label="Raza"

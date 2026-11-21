@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, Field, Modal, Notice } from '../../components/ui';
+import { SelectField } from '../../components/SelectField';
 import { usePublicBusiness } from '../../data/public-business';
 import { ownerRequest, ownerToken } from './OwnerAccess';
 import { BookingExtras, bookingParams, useBookingQuote } from '../booking/BookingExtras';
@@ -148,24 +149,26 @@ export function ManualBooking({
           <fieldset disabled={saving} className="form-stack">
             {profileMessage && <Notice>{profileMessage}</Notice>}
             <Field label="Cliente" htmlFor="booking-client">
-              <select
+              <SelectField
                 id="booking-client"
                 required
                 value={clientId}
-                onChange={(e) => {
-                  setClient(e.target.value);
+                onValueChange={(id) => {
+                  setClient(id);
                   selectPet('');
                 }}
-              >
-                <option value="">Selecciona un cliente</option>
-                {clients.data?.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.name}
-                    {client.phone ? ` · ${client.phone}` : client.email ? ` · ${client.email}` : ''}
-                    {client.hasAccount === false ? ' · Sin cuenta web' : ''}
-                  </option>
-                ))}
-              </select>
+                placeholder="Selecciona un cliente"
+                options={(clients.data ?? []).map((client) => ({
+                  value: client.id,
+                  label: [
+                    client.name,
+                    client.phone || client.email,
+                    client.hasAccount === false && 'Sin cuenta web',
+                  ]
+                    .filter(Boolean)
+                    .join(' · '),
+                }))}
+              />
             </Field>
             <Button
               type="button"
@@ -178,22 +181,15 @@ export function ManualBooking({
               Nueva ficha presencial
             </Button>
             <Field label="Mascota" htmlFor="booking-pet">
-              <select
+              <SelectField
                 id="booking-pet"
                 required
                 value={petId}
                 disabled={!clientId}
-                onChange={(e) => {
-                  selectPet(e.target.value);
-                }}
-              >
-                <option value="">Selecciona una mascota</option>
-                {pets.data?.map((entry) => (
-                  <option key={entry.id} value={entry.id}>
-                    {entry.name}
-                  </option>
-                ))}
-              </select>
+                onValueChange={selectPet}
+                placeholder="Selecciona una mascota"
+                options={(pets.data ?? []).map(({ id, name }) => ({ value: id, label: name }))}
+              />
             </Field>
             {clientId && (
               <Button
@@ -208,24 +204,22 @@ export function ManualBooking({
               </Button>
             )}
             <Field label="Servicio" htmlFor="booking-service">
-              <select
+              <SelectField
                 id="booking-service"
                 required
                 value={serviceId}
                 disabled={!petId}
-                onChange={(e) => {
-                  setService(e.target.value);
+                onValueChange={(id) => {
+                  setService(id);
                   setExtras([]);
                   setStart('');
                 }}
-              >
-                <option value="">Selecciona un servicio</option>
-                {services?.map((service) => (
-                  <option key={service.id} value={service.id}>
-                    {service.name} · {service.duration} min
-                  </option>
-                ))}
-              </select>
+                placeholder="Selecciona un servicio"
+                options={(services ?? []).map(({ id, name, duration }) => ({
+                  value: id,
+                  label: `${name} · ${duration} min`,
+                }))}
+              />
             </Field>
             {canQuote && (
               <BookingExtras
@@ -250,20 +244,18 @@ export function ManualBooking({
               />
             </Field>
             <Field label="Hora de Madrid" htmlFor="booking-time">
-              <select
+              <SelectField
                 id="booking-time"
                 required
                 disabled={!slots.data?.length || slots.isFetching}
                 value={startsAt}
-                onChange={(e) => setStart(e.target.value)}
-              >
-                <option value="">Selecciona un hueco</option>
-                {slots.data?.map((slot) => (
-                  <option key={slot} value={slot}>
-                    {slot.slice(11, 16)}
-                  </option>
-                ))}
-              </select>
+                onValueChange={setStart}
+                placeholder="Selecciona un hueco"
+                options={(slots.data ?? []).map((slot) => ({
+                  value: slot,
+                  label: slot.slice(11, 16),
+                }))}
+              />
             </Field>
             {(clients.isError || pets.isError || business.isError || slots.isError) && (
               <Notice error>No se pudieron cargar los datos de la cita.</Notice>
