@@ -6,23 +6,16 @@ import { Button, EmptyState, Modal, Notice } from '../../components/ui';
 import { PetFields, readPetFields, type PetDetails } from './PetForm';
 
 type ClientPet = PetDetails & { id: string };
-/** Lista y modifica las mascotas guardadas en la cuenta de cliente. */
-export function ClientPets({
-  token,
-  clientId,
-  selectedPetId,
-}: {
-  token: string;
-  clientId?: string;
-  selectedPetId?: string;
-}) {
-  const queryClient = useQueryClient();
-  const petsUrl = clientId
+function petsPath(clientId?: string) {
+  return clientId
     ? `/api/management/clients/${encodeURIComponent(clientId)}/pets`
     : '/api/auth/client/pets';
-  const queryKey = ['client-pets', petsUrl, token];
-  const pets = useQuery({
-    queryKey,
+}
+
+export function useClientPets(token: string, clientId?: string) {
+  const petsUrl = petsPath(clientId);
+  return useQuery({
+    queryKey: ['client-pets', petsUrl, token],
     gcTime: 0,
     retry: false,
     queryFn: async ({ signal }): Promise<ClientPet[]> => {
@@ -34,6 +27,24 @@ export function ClientPets({
       return response.json();
     },
   });
+}
+
+/** Lista y modifica mascotas o muestra el alta inicial en la reserva. */
+export function ClientPets({
+  token,
+  clientId,
+  selectedPetId,
+  onFirstPetSaved,
+}: {
+  token: string;
+  clientId?: string;
+  selectedPetId?: string;
+  onFirstPetSaved?: (id: string) => void;
+}) {
+  const queryClient = useQueryClient();
+  const petsUrl = petsPath(clientId);
+  const queryKey = ['client-pets', petsUrl, token];
+  const pets = useClientPets(token, clientId);
   const [editing, setEditing] = useState<ClientPet | 'new' | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -70,6 +81,7 @@ export function ClientPets({
       }
       if (!response.ok) throw new Error();
       const saved: ClientPet = await response.json();
+      onFirstPetSaved?.(saved.id);
       queryClient.setQueryData<ClientPet[]>(queryKey, (previous) =>
         [...(previous ?? []).filter((pet) => pet.id !== saved.id), saved].sort((a, b) =>
           a.name.localeCompare(b.name, 'es'),
@@ -84,6 +96,22 @@ export function ClientPets({
       setSaving(false);
     }
   }
+
+  const form = (
+    <form className="form-stack" onSubmit={save} key={current?.id ?? 'new'}>
+      <PetFields species={['Perro', 'Gato']} pet={current} />
+      {error && <Notice error>{error}</Notice>}
+      <Button type="submit" disabled={saving}>
+        {saving
+          ? 'Guardando…'
+          : onFirstPetSaved
+            ? 'Guardar mascota y continuar'
+            : 'Guardar mascota'}
+      </Button>
+    </form>
+  );
+
+  if (onFirstPetSaved) return form;
 
   return (
     <section className="customer-page">
@@ -147,13 +175,7 @@ export function ClientPets({
           if (!visible && !saving) setEditing(null);
         }}
       >
-        <form className="form-stack" onSubmit={save} key={current?.id ?? 'new'}>
-          <PetFields species={['Perro', 'Gato']} pet={current} />
-          {error && <Notice error>{error}</Notice>}
-          <Button type="submit" disabled={saving}>
-            {saving ? 'Guardando…' : 'Guardar mascota'}
-          </Button>
-        </form>
+        {form}
       </Modal>
     </section>
   );

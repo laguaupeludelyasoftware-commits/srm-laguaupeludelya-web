@@ -1,15 +1,29 @@
 import { expect, test } from '@playwright/test';
 
-test('reserva con el correo pendiente y recupera la cita al recargar', async ({ page }) => {
+test('añade la primera mascota y reserva un hueco libre con el correo pendiente', async ({
+  page,
+}) => {
+  await page.clock.setFixedTime(new Date('2027-01-11T09:00:00+01:00'));
   await page.addInitScript(() => sessionStorage.setItem('guaupelu-client-session', 'client-test'));
   await page.route('**/api/auth/client/me', (route) =>
     route.fulfill({
       json: { name: 'Clara', email: 'clara@example.test', emailVerified: false },
     }),
   );
-  await page.route('**/api/auth/client/pets', (route) =>
-    route.fulfill({ json: [{ id: 'pet', name: 'Milo', species: 'Perro' }] }),
-  );
+  const pet = { id: 'pet', name: 'Milo', species: 'Perro', weight: 6, coat: 'No lo sé' };
+  let hasPet = false;
+  await page.route('**/api/auth/client/pets', (route) => {
+    if (route.request().method() === 'POST') {
+      expect(route.request().postDataJSON()).toMatchObject({
+        name: 'Milo',
+        species: 'Perro',
+        weight: 6,
+      });
+      hasPet = true;
+      return route.fulfill({ status: 201, json: pet });
+    }
+    return route.fulfill({ json: hasPet ? [pet] : [] });
+  });
   await page.route('**/api/public/business', (route) =>
     route.fulfill({
       json: {
@@ -23,9 +37,12 @@ test('reserva con el correo pendiente y recupera la cita al recargar', async ({ 
   await page.route('**/api/auth/client/appointments/quote?*', (route) =>
     route.fulfill({ json: { price: 25, duration: 45, availableExtras: [] } }),
   );
-  await page.route('**/api/auth/client/appointments/availability?*', (route) =>
-    route.fulfill(booked ? { status: 409 } : { json: [startsAt] }),
-  );
+  await page.route('**/api/auth/client/appointments/availability?*', (route) => {
+    const day = new URL(route.request().url()).searchParams.get('date');
+    return route.fulfill(
+      booked ? { status: 409 } : { json: day === '2027-01-12' ? [startsAt] : [] },
+    );
+  });
   await page.route('**/api/auth/client/appointments', (route) => {
     if (route.request().method() === 'POST') {
       expect(route.request().headers().authorization).toBe('Bearer client-test');
@@ -60,10 +77,18 @@ test('reserva con el correo pendiente y recupera la cita al recargar', async ({ 
     });
   });
   await page.goto('/reservar?servicio=bath');
+  await expect(page.getByRole('heading', { name: 'Añade tu primera mascota' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Confirmar cita' })).toHaveCount(0);
+  await page.getByLabel('¿Cómo se llama?').fill('Milo');
+  await page.getByLabel('Peso aproximado (kg)').fill('6');
+  await page.getByRole('button', { name: 'Guardar mascota y continuar' }).click();
+  await expect(page.getByText('Paso 2 de 2')).toBeVisible();
   await expect(page.getByLabel('Servicio')).toHaveValue('bath');
-  await page.getByLabel('Mascota').selectOption('pet');
-  await page.getByLabel('Fecha').fill('2027-01-12');
-  await page.getByLabel('Hora de Madrid').selectOption(startsAt);
+  await expect(page.getByLabel('Mascota')).toHaveValue('pet');
+  await expect(page.getByRole('button', { name: /lunes, 11 de enero.*sin huecos/ })).toBeDisabled();
+  await page.getByRole('button', { name: /martes, 12 de enero/ }).click();
+  await expect(page.getByRole('radio')).toHaveCount(1);
+  await page.getByRole('radio', { name: '10:00' }).check();
   await page.getByRole('button', { name: 'Confirmar cita' }).click();
   await expect(page.getByText('Cita confirmada.')).toBeVisible();
   await page.reload();
