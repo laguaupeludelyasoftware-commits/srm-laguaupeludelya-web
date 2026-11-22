@@ -911,20 +911,7 @@ legend {
   font-size: 0.86rem;
 }
 .contact-section {
-  display: grid;
-  gap: 28px;
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  padding: 55px 60px;
   margin-block: clamp(28px, 5vw, 64px) 80px;
-}
-.contact-section h2 {
-  margin: 15px 0 20px;
-}
-.contact-section > div > p {
-  font-size: 0.81rem;
-  color: var(--muted);
 }
 .contact-section .soft-tag {
   display: inline-flex;
@@ -945,6 +932,7 @@ legend {
   border: 1px solid #d9dece;
   border-radius: 16px;
   background: #f7f8f1;
+  box-shadow: 0 10px 26px #344c3a17;
 }
 .published-hours h3,
 .contact-map h3 {
@@ -3043,10 +3031,6 @@ td > small {
   .service-card {
     padding: 25px 20px;
   }
-  .contact-section {
-    padding: 40px;
-    gap: 35px;
-  }
   .management-layout {
     grid-template-columns: 210px minmax(0, 1fr);
   }
@@ -3255,12 +3239,7 @@ td > small {
     margin: 4px;
   }
   .contact-section {
-    padding: 35px;
-    gap: 30px;
     margin-bottom: 50px;
-  }
-  .contact-section p {
-    font-size: 0.73rem !important;
   }
   .footer-inner {
     flex-wrap: wrap;
@@ -3580,13 +3559,7 @@ td > small {
     max-width: 200px;
   }
   .contact-section {
-    padding: 30px 25px;
-    gap: 30px;
-    border-radius: 14px;
     margin-bottom: 45px;
-  }
-  .contact-section h2 {
-    font-size: 2.2rem;
   }
   .contact-details {
     grid-template-columns: minmax(0, 1fr);

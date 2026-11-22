@@ -240,13 +240,15 @@ export function LandingPage() {
         </div>
       </section>
       <section id="contacto" className="contact-section container">
-        <div>
-          <span className="eyebrow">NOS ENCANTARÁ CONOCEROS</span>
-          <h2>
-            ¿Una duda antes
-            <br />
-            del primer <em>guau?</em>
-          </h2>
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">NOS ENCANTARÁ CONOCEROS</span>
+            <h2>
+              ¿Una duda antes
+              <br />
+              del primer <em>guau?</em>
+            </h2>
+          </div>
           {business.isPending && <p role="status">Cargando datos de contacto…</p>}
           {business.isError && <p role="status">No se pudieron cargar los datos de contacto.</p>}
           {business.isSuccess && !contact && <p>Los datos de contacto aún no están publicados.</p>}
