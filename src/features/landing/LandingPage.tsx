@@ -10,6 +10,7 @@ import {
   Clock3,
   Heart,
   Leaf,
+  MapPin,
   PawPrint,
   Scissors,
   Sparkles,
@@ -20,7 +21,7 @@ import { businessDays, usePublicBusiness } from '../../data/public-business';
 import { euros } from '../../domain/rules';
 
 import { whatsappNumber } from '../../lib/whatsapp';
-import { LandingWhatsApp } from './LandingWhatsApp';
+import { LandingContactActions } from './LandingContactActions';
 
 const carePhrases = [
   { Icon: PawPrint, text: 'Cuidado con calma' },
@@ -34,6 +35,12 @@ export function LandingPage() {
   const business = usePublicBusiness();
   const contact = business.data?.contact;
   const whatsapp = whatsappNumber(contact?.phone);
+  const mapAddress = contact?.address.trim();
+  const mapQuery = mapAddress
+    ? /cáceres/i.test(mapAddress)
+      ? mapAddress
+      : `${mapAddress}, Cáceres`
+    : '';
   const services = business.data?.services ?? [];
   const [showAllServices, setShowAllServices] = useState(false);
   const icons = [Bath, Scissors, Sparkles];
@@ -252,6 +259,8 @@ export function LandingPage() {
               {contact.address}
             </p>
           )}
+        </div>
+        <div className="contact-details">
           <div className="published-hours">
             <h3>
               <Clock3 size={21} aria-hidden="true" /> Horario de atención
@@ -283,18 +292,32 @@ export function LandingPage() {
                   })}
                 </dl>
               ))}
-            {whatsapp && <LandingWhatsApp number={whatsapp} />}
+            {whatsapp && <LandingContactActions number={whatsapp} />}
           </div>
-        </div>
-        <div className="contact-card">
-          <PawPrint size={32} strokeWidth={1.3} />
-          <h3>Reserva un ratito para él.</h3>
-          <p>Crea tu cuenta para añadir tus mascotas y reservar online.</p>
-          <Button asChild>
-            <Link to="/reservar">
-              Consultar reservas <ArrowUpRight size={18} />
-            </Link>
-          </Button>
+          {mapQuery && (
+            <section className="contact-map" aria-labelledby="contact-map-title">
+              <div className="contact-map-heading">
+                <h3 id="contact-map-title">
+                  <MapPin size={21} aria-hidden="true" /> Cómo llegar
+                </h3>
+                <a
+                  className="inline-link"
+                  href={`https://www.google.com/maps/dir/?${new URLSearchParams({ api: '1', destination: mapQuery })}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Abrir indicaciones <ArrowUpRight size={15} aria-hidden="true" />
+                </a>
+              </div>
+              <iframe
+                title="Mapa de La Guaupelu de Lya"
+                src={`https://www.google.com/maps?${new URLSearchParams({ q: mapQuery, output: 'embed' })}`}
+                loading="lazy"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
+            </section>
+          )}
         </div>
       </section>
     </>

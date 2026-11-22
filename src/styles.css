@@ -912,14 +912,12 @@ legend {
 }
 .contact-section {
   display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 65px;
+  gap: 28px;
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 20px;
   padding: 55px 60px;
   margin-block: clamp(28px, 5vw, 64px) 80px;
-  align-items: center;
 }
 .contact-section h2 {
   margin: 15px 0 20px;
@@ -933,14 +931,23 @@ legend {
   margin-top: 20px;
   font-size: 0.6rem;
 }
-.published-hours {
-  margin-top: 1.4rem;
+.contact-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.published-hours:only-child {
+  grid-column: 1 / -1;
+}
+.published-hours,
+.contact-map {
   padding: clamp(14px, 3vw, 24px);
   border: 1px solid #d9dece;
   border-radius: 16px;
   background: #f7f8f1;
 }
-.published-hours h3 {
+.published-hours h3,
+.contact-map h3 {
   display: flex;
   align-items: center;
   gap: 0.55rem;
@@ -949,8 +956,37 @@ legend {
   font-family: var(--serif);
   font-size: 1.25rem;
 }
-.published-hours h3 svg {
+.published-hours h3 svg,
+.contact-map h3 svg {
   flex-shrink: 0;
+}
+.contact-map {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 12px;
+}
+.contact-map-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px 16px;
+}
+.contact-map-heading a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.875rem;
+}
+.contact-map iframe {
+  display: block;
+  flex: 1;
+  width: 100%;
+  min-height: 200px;
+  border: 0;
+  border-radius: 10px;
+  background: #e5e9df;
 }
 .published-hours dl {
   margin: 0.7rem 0 0;
@@ -977,24 +1013,29 @@ legend {
 .published-hours .hours-closed {
   color: var(--muted);
 }
-.hours-whatsapp-slot {
-  height: 56px;
+.hours-contact-slot {
+  height: 120px;
   margin-top: 0.9rem;
 }
-.hours-whatsapp-corner,
-.hours-whatsapp[data-docked='false'] {
+.hours-contact-corner,
+.hours-contact-actions[data-docked='false'] {
   position: fixed;
   right: max(16px, env(safe-area-inset-right));
   bottom: max(16px, env(safe-area-inset-bottom));
   width: 56px;
 }
-.hours-whatsapp-corner {
-  height: 56px;
+.hours-contact-corner {
+  height: 120px;
   visibility: hidden;
 }
-.hours-whatsapp {
+.hours-contact-actions {
   position: relative;
   z-index: 10;
+  display: grid;
+  gap: 8px;
+  transform-origin: top left;
+}
+.hours-contact-actions > a {
   display: flex;
   width: 100%;
   height: 56px;
@@ -1003,53 +1044,36 @@ legend {
   gap: 0.5rem;
   overflow: hidden;
   border-radius: 28px;
-  background: #14684e;
-  color: white;
   font-size: 0.875rem;
   font-weight: 700;
   text-decoration: none;
-  transform-origin: top left;
   transition: background-color 160ms ease;
+}
+.hours-call {
+  border: 1px solid #52644e;
+  background: #fff;
+  color: #354631;
+}
+.hours-call:hover {
+  background: #e9ede3;
+}
+.hours-whatsapp {
+  background: #14684e;
+  color: white;
 }
 .hours-whatsapp:hover {
   background: #0f523e;
 }
-.hours-whatsapp[data-docked='false'] {
+.hours-contact-actions[data-docked='false'] > a {
   box-shadow: 0 5px 18px #163e3440;
 }
-.hours-whatsapp[data-docked='false'] .hours-whatsapp-label {
+.hours-contact-actions[data-docked='false'] span {
   display: none;
 }
 .hours-whatsapp svg {
   width: 24px;
   height: 24px;
   flex: none;
-}
-.contact-card {
-  background: #f9f8ef;
-  border: 1px solid #d9dece;
-  border-radius: 14px;
-  padding: 30px;
-  text-align: center;
-  color: var(--green);
-}
-.contact-card > svg {
-  margin: 0 auto 15px;
-}
-.contact-card h3 {
-  font-family: var(--serif);
-  font-size: 1.5rem;
-}
-.contact-card p {
-  margin: 14px auto 23px;
-  font-size: 0.78rem !important;
-  max-width: 255px;
-}
-.contact-card small {
-  display: block;
-  color: var(--muted);
-  margin-top: 15px;
-  font-size: 0.61rem;
 }
 .footer {
   border-top: 1px solid var(--line);
@@ -3237,12 +3261,6 @@ td > small {
   .contact-section p {
     font-size: 0.73rem !important;
   }
-  .contact-card {
-    padding: 25px 18px;
-  }
-  .contact-card h3 {
-    font-size: 1.2rem;
-  }
   .footer-inner {
     flex-wrap: wrap;
     row-gap: 25px;
@@ -3561,7 +3579,6 @@ td > small {
     max-width: 200px;
   }
   .contact-section {
-    grid-template-columns: 1fr;
     padding: 30px 25px;
     gap: 30px;
     border-radius: 14px;
@@ -3570,14 +3587,9 @@ td > small {
   .contact-section h2 {
     font-size: 2.2rem;
   }
-  .contact-card {
-    padding: 27px 20px;
-  }
-  .contact-card h3 {
-    font-size: 1.5rem;
-  }
-  .contact-card p {
-    font-size: 0.79rem !important;
+  .contact-details {
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: 1fr;
   }
   .footer {
     padding-top: 25px;

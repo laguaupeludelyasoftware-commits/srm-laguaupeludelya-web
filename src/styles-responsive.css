@@ -343,8 +343,7 @@
   }
 
   .service-card > p,
-  .philosophy-grid p,
-  .contact-card p {
+  .philosophy-grid p {
     font-size: 0.88rem !important;
   }
 

@@ -31,6 +31,9 @@ test('mantiene el separador de la landing en una sola línea al cambiar el ancho
 test('pide una cuenta para reservar y conserva el servicio elegido al registrarse', async ({
   page,
 }) => {
+  await page.route('https://www.google.com/maps?**', (route) =>
+    route.fulfill({ contentType: 'text/html', body: '<title>Mapa</title>' }),
+  );
   await page.route('**/api/public/business', (route) =>
     route.fulfill({
       json: {
@@ -55,15 +58,29 @@ test('pide una cuenta para reservar y conserva el servicio elegido al registrars
   );
   await expect(page.getByText('C/ Dionisio Acedo n.º 6')).toBeVisible();
   const whatsapp = page.getByRole('link', { name: 'Preguntar por WhatsApp' });
+  const actions = page.locator('.hours-contact-actions');
+  const map = page.getByTitle('Mapa de La Guaupelu de Lya');
+  await expect(map).toHaveAttribute('src', /output=embed/);
+  await expect(page.getByRole('link', { name: 'Abrir indicaciones' })).toHaveAttribute(
+    'href',
+    /destination=.*Dionisio\+Acedo/,
+  );
+  await expect(page.getByRole('link', { name: 'Llamar al local' })).toHaveAttribute(
+    'href',
+    'tel:+34746044453',
+  );
   await expect(whatsapp).toHaveAttribute('href', 'https://wa.me/34746044453');
-  await expect(whatsapp).toHaveAttribute('data-docked', 'false');
-  await page.getByText('Horario de atención').evaluate((heading) => {
-    heading.parentElement?.scrollIntoView({ block: 'end' });
-    window.scrollBy(0, 32);
+  await expect(actions).toHaveAttribute('data-docked', 'false');
+  await page.locator('.hours-contact-slot').evaluate((slot) => {
+    slot.scrollIntoView({ block: 'center' });
   });
-  await expect(whatsapp).toHaveAttribute('data-docked', 'true');
+  await expect(actions).toHaveAttribute('data-docked', 'true');
+  const hoursCard = await page.locator('.published-hours').boundingBox();
+  const mapCard = await page.getByRole('region', { name: 'Cómo llegar' }).boundingBox();
+  expect(mapCard?.width).toBeCloseTo(hoursCard?.width ?? 0, 0);
+  expect(mapCard?.height).toBeCloseTo(hoursCard?.height ?? 0, 0);
   await page.evaluate(() => window.scrollTo(0, 0));
-  await expect(whatsapp).toHaveAttribute('data-docked', 'false');
+  await expect(actions).toHaveAttribute('data-docked', 'false');
   await page.getByRole('link', { name: 'Reservar Baño publicado' }).click();
   await expect(page).toHaveURL(/\/iniciar-sesion$/);
   await expect(page.getByText('Clara', { exact: true })).toHaveCount(0);
