@@ -100,7 +100,6 @@ export function PublicLayout() {
             <a href="/#servicios">Nuestros cuidados</a>
             <a href="/#filosofia">El espacio de Lya</a>
             <a href="/#contacto">Contacto</a>
-            {!profile && <NavLink to="/iniciar-sesion">Iniciar sesión</NavLink>}
             <Button asChild size="small">
               <Link to="/reservar">
                 Reservar cita <ArrowUpRight size={16} />
