@@ -54,10 +54,16 @@ test('pide una cuenta para reservar y conserva el servicio elegido al registrars
     'tel:746044453',
   );
   await expect(page.getByText('C/ Dionisio Acedo n.º 6')).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Preguntar por WhatsApp' })).toHaveAttribute(
-    'href',
-    'https://wa.me/34746044453',
-  );
+  const whatsapp = page.getByRole('link', { name: 'Preguntar por WhatsApp' });
+  await expect(whatsapp).toHaveAttribute('href', 'https://wa.me/34746044453');
+  await expect(whatsapp).toHaveAttribute('data-docked', 'false');
+  await page.getByText('Horario de atención').evaluate((heading) => {
+    heading.parentElement?.scrollIntoView({ block: 'end' });
+    window.scrollBy(0, 32);
+  });
+  await expect(whatsapp).toHaveAttribute('data-docked', 'true');
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect(whatsapp).toHaveAttribute('data-docked', 'false');
   await page.getByRole('link', { name: 'Reservar Baño publicado' }).click();
   await expect(page).toHaveURL(/\/iniciar-sesion$/);
   await expect(page.getByText('Clara', { exact: true })).toHaveCount(0);

@@ -7,6 +7,7 @@ import {
   Cat,
   ChevronDown,
   ChevronUp,
+  Clock3,
   Heart,
   Leaf,
   PawPrint,
@@ -19,6 +20,7 @@ import { businessDays, usePublicBusiness } from '../../data/public-business';
 import { euros } from '../../domain/rules';
 
 import { whatsappNumber } from '../../lib/whatsapp';
+import { LandingWhatsApp } from './LandingWhatsApp';
 
 const carePhrases = [
   { Icon: PawPrint, text: 'Cuidado con calma' },
@@ -250,15 +252,10 @@ export function LandingPage() {
               {contact.address}
             </p>
           )}
-          {whatsapp && (
-            <Button asChild variant="outline">
-              <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noreferrer">
-                Preguntar por WhatsApp
-              </a>
-            </Button>
-          )}
           <div className="published-hours">
-            <h3>Horario de atención</h3>
+            <h3>
+              <Clock3 size={21} aria-hidden="true" /> Horario de atención
+            </h3>
             {business.isPending && <p role="status">Cargando el horario…</p>}
             {business.isError && <p>No se pudo consultar el horario.</p>}
             {business.isSuccess &&
@@ -272,9 +269,13 @@ export function LandingPage() {
                     return (
                       <div key={label}>
                         <dt>{label}</dt>
-                        <dd>
+                        <dd className={intervals.length ? undefined : 'hours-closed'}>
                           {intervals.length
-                            ? intervals.map(({ start, end }) => `${start}–${end}`).join(' y ')
+                            ? intervals.map(({ start, end }) => (
+                                <span key={`${start}-${end}`}>
+                                  {start}–{end}
+                                </span>
+                              ))
                             : 'Cerrado'}
                         </dd>
                       </div>
@@ -282,6 +283,7 @@ export function LandingPage() {
                   })}
                 </dl>
               ))}
+            {whatsapp && <LandingWhatsApp number={whatsapp} />}
           </div>
         </div>
         <div className="contact-card">
