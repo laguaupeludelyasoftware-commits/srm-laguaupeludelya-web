@@ -1091,14 +1091,6 @@ legend {
   align-items: center;
   gap: 8px;
 }
-.footer-note {
-  margin-top: 28px;
-  padding-top: 15px;
-  border-top: 1px solid var(--line);
-  font-size: 0.59rem;
-  color: #858976;
-  text-align: center;
-}
 /* Composición compartida de formularios y estados; mantiene consistencia entre áreas. */
 .panel {
   background: #fffef9;
@@ -3575,10 +3567,6 @@ td > small {
   }
   .footer-inner > a:last-child {
     margin-left: 0;
-  }
-  .footer-note {
-    text-align: left;
-    font-size: 0.55rem;
   }
   .page-heading {
     align-items: flex-start;
