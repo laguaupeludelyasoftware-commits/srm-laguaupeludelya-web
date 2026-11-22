@@ -52,15 +52,13 @@ test('pide una cuenta para reservar y conserva el servicio elegido al registrars
     }),
   );
   await page.goto('/');
-  await expect(page.getByRole('link', { name: '746044453' })).toHaveAttribute(
-    'href',
-    'tel:746044453',
-  );
-  await expect(page.getByText('C/ Dionisio Acedo n.º 6')).toBeVisible();
+  await expect(page.getByText('746044453', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('C/ Dionisio Acedo n.º 6', { exact: true })).toHaveCount(0);
   const whatsapp = page.getByRole('link', { name: 'Preguntar por WhatsApp' });
   const actions = page.locator('.hours-contact-actions');
   const map = page.getByTitle('Mapa de La Guaupelu de Lya');
   await expect(map).toHaveAttribute('src', /output=embed/);
+  await expect(map).toHaveAttribute('src', /[?&]z=18(?:&|$)/);
   await expect(page.getByRole('link', { name: 'Abrir indicaciones' })).toHaveAttribute(
     'href',
     /destination=.*Dionisio\+Acedo/,

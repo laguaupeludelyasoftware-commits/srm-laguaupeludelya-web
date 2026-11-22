@@ -987,6 +987,7 @@ legend {
   border: 0;
   border-radius: 10px;
   background: #e5e9df;
+  filter: saturate(0.8);
 }
 .published-hours dl {
   margin: 0.7rem 0 0;

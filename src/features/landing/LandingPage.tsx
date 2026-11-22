@@ -250,15 +250,6 @@ export function LandingPage() {
           {business.isPending && <p role="status">Cargando datos de contacto…</p>}
           {business.isError && <p role="status">No se pudieron cargar los datos de contacto.</p>}
           {business.isSuccess && !contact && <p>Los datos de contacto aún no están publicados.</p>}
-          {contact && (
-            <p>
-              <a className="inline-link" href={`tel:${contact.phone}`}>
-                {contact.phone}
-              </a>
-              <br />
-              {contact.address}
-            </p>
-          )}
         </div>
         <div className="contact-details">
           <div className="published-hours">
@@ -311,7 +302,7 @@ export function LandingPage() {
               </div>
               <iframe
                 title="Mapa de La Guaupelu de Lya"
-                src={`https://www.google.com/maps?${new URLSearchParams({ q: mapQuery, output: 'embed' })}`}
+                src={`https://www.google.com/maps?${new URLSearchParams({ q: mapQuery, z: '18', output: 'embed' })}`}
                 loading="lazy"
                 referrerPolicy="strict-origin-when-cross-origin"
                 allowFullScreen
