@@ -840,6 +840,7 @@ legend {
 .philosophy-art {
   position: relative;
   max-width: 450px;
+  padding-block: 48px 36px;
 }
 .handwritten {
   position: absolute;
@@ -851,9 +852,11 @@ legend {
   transform: rotate(-9deg);
   color: #829073;
 }
-.dog-drawing {
+.philosophy-image {
+  display: block;
   width: 100%;
   height: auto;
+  border-radius: 24px;
 }
 .round-stamp {
   position: absolute;

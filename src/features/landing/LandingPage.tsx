@@ -84,12 +84,10 @@ export function LandingPage() {
           transition={{ duration: 0.55 }}
         >
           <span className="eyebrow">
-            <span className="tiny-line" /> PARA PERROS, GATOS Y SUS PERSONAS
+            <span className="tiny-line" /> UN LUGAR PENSADO PARA ELLOS Y PARA QUIENES LOS QUIEREN.
           </span>
           <h1>
-            Un poquito de mimo.
-            <br />
-            Un montón de <em>guau.</em>
+            Cuidar de ellos, <em>como se merecen.</em>
             <svg className="hero-underline" viewBox="0 0 250 16" aria-hidden="true">
               <path
                 d="M3 10Q100 0 244 8M20 15Q150 7 220 12"
@@ -100,8 +98,8 @@ export function LandingPage() {
             </svg>
           </h1>
           <p>
-            Su bienestar, nuestro detalle favorito. Un espacio para cuidar su pelaje, respetar su
-            ritmo y sacar a pasear su mejor versión.
+            Mucho más que un baño y un corte. Un lugar donde cada perro recibe atención, cariño y
+            cuidados adaptados a él. Porque su bienestar importa tanto como el resultado.
           </p>
         </motion.div>
         <motion.div
@@ -148,14 +146,14 @@ export function LandingPage() {
           <div>
             <span className="eyebrow">SU MOMENTO FAVORITO</span>
             <h2>
-              Cuidados que se notan.
+              Un ratito para sentirse bien.
               <br />
-              <em>Mimos que se sienten.</em>
+              <em>Cuidados hechos a medida.</em>
             </h2>
           </div>
           <p>
-            Cada pelaje tiene su historia. <br />
-            Encontramos el cuidado que le va.
+            Cada perro necesita algo diferente. Por eso ofrecemos distintos servicios para cuidar su
+            pelaje y mantenerlo limpio, sano y precioso.
           </p>
         </div>
         <div className="service-grid">
@@ -206,7 +204,14 @@ export function LandingPage() {
         <div className="container philosophy-grid">
           <div className="philosophy-art">
             <span className="handwritten">con calma y con cariño</span>
-            <DogDrawing />
+            <img
+              className="philosophy-image"
+              src="/imagen-landing-page.webp"
+              alt="Una peluquera recorta con tijeras el pelo de un perro blanco."
+              width={1254}
+              height={1254}
+              loading="lazy"
+            />
             <span className="round-stamp">
               PEQUEÑAS PATITAS
               <br />
@@ -216,21 +221,26 @@ export function LandingPage() {
             </span>
           </div>
           <div>
-            <span className="eyebrow">EL ESPACIO DE LYA</span>
-            <h2>
-              Porque detrás de cada
-              <br />
-              pelaje hay <em>alguien único.</em>
-            </h2>
+            <h2>MUCHO MÁS QUE UNA PELUQUERÍA</h2>
             <p>
-              No todos disfrutan igual de un baño, ni todos necesitan el mismo corte. Queremos
-              conocerle: cómo es, qué le gusta y qué le ayuda a sentirse a gusto.
+              En La Guaupelu de Lya creemos que cada perro es diferente y que cada uno merece
+              recibir un trato especial.
             </p>
             <p>
-              Un espacio pensado para los pequeños detalles y para que su próxima visita empiece con
-              confianza.
+              Nos gusta hacer las cosas con calma, conocer a cada perro y adaptarnos a sus
+              necesidades, respetando su carácter y su forma de ser. Porque para nosotros no se
+              trata solo de que salgan guapos, sino también de que se sientan cómodos y bien
+              cuidados durante todo el proceso.
             </p>
-            <p>Lya fue la perra de Nazaret e inspiró el nombre y el diseño de la peluquería.</p>
+            <p>
+              Hemos creado un espacio donde el cuidado, la paciencia y el cariño forman parte de
+              cada visita.
+            </p>
+            <p>
+              La Guaupelu de Lya nace del amor por los animales y lleva consigo un pedacito de Lya,
+              la perrita que inspiró este proyecto y que siempre tendrá un lugar especial en él.
+            </p>
+            <p>Porque estar guapos está genial, pero sentirse a gusto es lo más importante.</p>
             <div className="philosophy-sign">
               <span>Nazaret</span>
               <Heart size={19} strokeWidth={1.2} />
@@ -244,9 +254,7 @@ export function LandingPage() {
           <div>
             <span className="eyebrow">NOS ENCANTARÁ CONOCEROS</span>
             <h2>
-              ¿Una duda antes
-              <br />
-              del primer <em>guau?</em>
+              Tu próxima visita empieza por aquí. <em>¡Cuéntanos qué necesitas!</em>
             </h2>
           </div>
           {business.isPending && <p role="status">Cargando datos de contacto…</p>}
@@ -314,57 +322,5 @@ export function LandingPage() {
         </div>
       </section>
     </>
-  );
-}
-
-/** Ilustración vectorial propia: aporta identidad sin fingir una fotografía del negocio. */
-function DogDrawing() {
-  return (
-    <svg className="dog-drawing" viewBox="0 0 380 360" fill="none" aria-hidden="true">
-      <ellipse cx="193" cy="309" rx="122" ry="15" fill="#d6d9c8" />
-      <path
-        d="M126 150c-51-13-65-62-33-83 25-16 62 13 69 33M240 103c20-44 65-49 78-23 16 32-9 62-47 72"
-        fill="#b2bba3"
-        stroke="#53634f"
-        strokeWidth="2.5"
-      />
-      <path
-        d="M116 156c0-58 35-83 77-83 50 0 83 36 81 88l-10 77c-6 40-31 58-67 58-38 0-68-18-72-57z"
-        fill="#f5ede1"
-        stroke="#53634f"
-        strokeWidth="2.5"
-      />
-      <path
-        d="M139 251l-14 49c-4 17 14 23 26 11l21-29m61-30 17 47c6 18-10 24-24 13l-23-29"
-        fill="#f5ede1"
-        stroke="#53634f"
-        strokeWidth="2.5"
-      />
-      <ellipse cx="157" cy="155" rx="7" ry="10" fill="#53634f" />
-      <ellipse cx="232" cy="155" rx="7" ry="10" fill="#53634f" />
-      <circle cx="159" cy="152" r="2" fill="white" />
-      <circle cx="234" cy="152" r="2" fill="white" />
-      <path d="M180 181q15-9 29 0-3 15-15 15-10-1-14-15" fill="#53634f" />
-      <path
-        d="M194 194v13m-23-1q22 26 46 0"
-        stroke="#53634f"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-      />
-      <path d="M188 218q15 4 17-2v15q-15 19-17-13" fill="#c59886" />
-      <path d="M135 245q58 25 122 0" stroke="#a58a70" strokeWidth="8" />
-      <circle cx="194" cy="262" r="9" fill="#b79d7e" />
-      <path
-        d="M55 181l13 5-8 12m245 34 13 2-4 13M174 49l4-13m12 16 9-10"
-        stroke="#a58a70"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M65 257q-36-20-23-40 17-13 26 8 12-21 27-5 9 19-30 37"
-        stroke="#a58a70"
-        strokeWidth="2"
-      />
-    </svg>
   );
 }
